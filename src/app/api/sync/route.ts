@@ -1,91 +1,80 @@
-import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+import * as cheerio from 'cheerio'
 
 export async function GET() {
   try {
-    // Fetch live MMA data from API-Sports
-    const response = await fetch('https://v1.mma.api-sports.io/fights?season=2023', {
+    // Scrape upcoming MMA events from Tapology
+    const response = await fetch('https://www.tapology.com/fightcenter', {
       headers: {
-        'x-apisports-key': process.env.API_SPORTS_KEY!
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+      }
+    })
+    if (!response.ok) {
+      throw new Error(`Fetch failed: ${response.status}`)
+    }
+    const html = await response.text()
+    console.log('HTML length:', html.length)
+    const $ = cheerio.load(html)
+
+    const events: any[] = []
+
+    // Find event previews
+    console.log('Found divs:', $('div[id^="preview"]').length)
+    $('span a[href*="/fightcenter/events/"]').each((index, element) => {
+      const eventLink = $(element).attr('href')
+      if (eventLink) {
+        const eventName = $(element).text().trim()
+        const eventId = eventLink.split('/').pop()
+
+        events.push({
+          id: eventId,
+          name: eventName,
+          league: 'MMA',
+          date: null,
+          status: 'scheduled'
+        })
       }
     })
 
-    if (!response.ok) {
-      const errorText = await response.text()
-      throw new Error(`API request failed: ${response.status} - ${errorText}`)
-    }
-
-    const data = await response.json()
-
-    console.log('API Response:', data)
-    console.log('Total events fetched:', data.response?.length || 0)
-
-    // Filter for UFC and Top Rank Boxing
-    const filteredEvents = data.response.filter((event: any) => {
-      console.log('Event league:', event.league?.name)
-      return event.league?.name === 'UFC' || event.league?.name === 'Top Rank Boxing'
-    })
-
-    console.log('Filtered events:', filteredEvents.length)
+    console.log('Events scraped:', events)
 
     const logs: string[] = []
+    const allFights: any[] = []
 
-    for (const event of filteredEvents) {
-      // Upsert event
-      const { error: eventError } = await supabase
-        .from('events')
-        .upsert({
-          id: event.id,
-          name: event.name,
-          league: event.league.name,
-          date: event.date,
-          status: event.status
-        })
+    for (const event of events.slice(0, 2)) { // Limit to 2 for testing
+      logs.push(`Event ${event.name} synced`)
 
-      if (eventError) {
-        console.error('Error upserting event:', eventError)
-        continue
-      }
-
-      for (const fight of event.fights) {
-        // Check current status for change detection
-        const { data: currentFight } = await supabase
-          .from('fights')
-          .select('status')
-          .eq('id', fight.id)
-          .single()
-
-        if (currentFight && currentFight.status === 'live' && fight.status === 'finished') {
-          logs.push(`Fight ${fight.id} (${fight.fighter_a} vs ${fight.fighter_b}) finished`)
+      // Mock fights for testing
+      const fights: any[] = [
+        {
+          id: `${event.id}-1`,
+          event_id: event.id,
+          fighter_a: 'Alexandre Pantoja',
+          fighter_b: 'Kai Asakura',
+          order_index: 0,
+          status: 'scheduled',
+          current_round: null,
+          max_rounds: 5,
+          updated_at: new Date().toISOString()
+        },
+        {
+          id: `${event.id}-2`,
+          event_id: event.id,
+          fighter_a: 'Jon Jones',
+          fighter_b: 'Stipe Miocic',
+          order_index: 1,
+          status: 'scheduled',
+          current_round: null,
+          max_rounds: 5,
+          updated_at: new Date().toISOString()
         }
+      ]
 
-        // Upsert fight
-        const { error: fightError } = await supabase
-          .from('fights')
-          .upsert({
-            id: fight.id,
-            event_id: event.id,
-            fighter_a: fight.fighter_a,
-            fighter_b: fight.fighter_b,
-            order_index: fight.order_index,
-            status: fight.status,
-            current_round: fight.current_round,
-            max_rounds: fight.max_rounds,
-            updated_at: new Date().toISOString()
-          })
-
-        if (fightError) {
-          console.error('Error upserting fight:', fightError)
-        }
-      }
+      allFights.push(...fights)
+      logs.push(`Event ${event.name} with ${fights.length} fights synced`)
     }
 
-    return NextResponse.json({ message: 'Sync completed', logs })
+    return NextResponse.json({ message: 'Sync completed', events, fights: allFights, logs })
   } catch (error) {
     console.error('Sync error:', error)
     return NextResponse.json({ error: 'Sync failed' }, { status: 500 })

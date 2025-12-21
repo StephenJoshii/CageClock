@@ -67,6 +67,292 @@ module.exports = require("next/dist/server/app-render/work-unit-async-storage.ex
 
 /***/ }),
 
+/***/ "buffer":
+/*!*************************!*\
+  !*** external "buffer" ***!
+  \*************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("buffer");
+
+/***/ }),
+
+/***/ "node:sqlite":
+/*!******************************!*\
+  !*** external "node:sqlite" ***!
+  \******************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:sqlite");
+
+/***/ }),
+
+/***/ "stream":
+/*!*************************!*\
+  !*** external "stream" ***!
+  \*************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("stream");
+
+/***/ }),
+
+/***/ "string_decoder":
+/*!*********************************!*\
+  !*** external "string_decoder" ***!
+  \*********************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("string_decoder");
+
+/***/ }),
+
+/***/ "node:assert":
+/*!******************************!*\
+  !*** external "node:assert" ***!
+  \******************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:assert");
+
+/***/ }),
+
+/***/ "node:async_hooks":
+/*!***********************************!*\
+  !*** external "node:async_hooks" ***!
+  \***********************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:async_hooks");
+
+/***/ }),
+
+/***/ "node:buffer":
+/*!******************************!*\
+  !*** external "node:buffer" ***!
+  \******************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:buffer");
+
+/***/ }),
+
+/***/ "node:console":
+/*!*******************************!*\
+  !*** external "node:console" ***!
+  \*******************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:console");
+
+/***/ }),
+
+/***/ "node:crypto":
+/*!******************************!*\
+  !*** external "node:crypto" ***!
+  \******************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:crypto");
+
+/***/ }),
+
+/***/ "node:diagnostics_channel":
+/*!*******************************************!*\
+  !*** external "node:diagnostics_channel" ***!
+  \*******************************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:diagnostics_channel");
+
+/***/ }),
+
+/***/ "node:dns":
+/*!***************************!*\
+  !*** external "node:dns" ***!
+  \***************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:dns");
+
+/***/ }),
+
+/***/ "node:events":
+/*!******************************!*\
+  !*** external "node:events" ***!
+  \******************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:events");
+
+/***/ }),
+
+/***/ "node:fs/promises":
+/*!***********************************!*\
+  !*** external "node:fs/promises" ***!
+  \***********************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:fs/promises");
+
+/***/ }),
+
+/***/ "node:http":
+/*!****************************!*\
+  !*** external "node:http" ***!
+  \****************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:http");
+
+/***/ }),
+
+/***/ "node:http2":
+/*!*****************************!*\
+  !*** external "node:http2" ***!
+  \*****************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:http2");
+
+/***/ }),
+
+/***/ "node:net":
+/*!***************************!*\
+  !*** external "node:net" ***!
+  \***************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:net");
+
+/***/ }),
+
+/***/ "node:path":
+/*!****************************!*\
+  !*** external "node:path" ***!
+  \****************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:path");
+
+/***/ }),
+
+/***/ "node:perf_hooks":
+/*!**********************************!*\
+  !*** external "node:perf_hooks" ***!
+  \**********************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:perf_hooks");
+
+/***/ }),
+
+/***/ "node:querystring":
+/*!***********************************!*\
+  !*** external "node:querystring" ***!
+  \***********************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:querystring");
+
+/***/ }),
+
+/***/ "node:stream":
+/*!******************************!*\
+  !*** external "node:stream" ***!
+  \******************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:stream");
+
+/***/ }),
+
+/***/ "node:timers":
+/*!******************************!*\
+  !*** external "node:timers" ***!
+  \******************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:timers");
+
+/***/ }),
+
+/***/ "node:tls":
+/*!***************************!*\
+  !*** external "node:tls" ***!
+  \***************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:tls");
+
+/***/ }),
+
+/***/ "node:util":
+/*!****************************!*\
+  !*** external "node:util" ***!
+  \****************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:util");
+
+/***/ }),
+
+/***/ "node:util/types":
+/*!**********************************!*\
+  !*** external "node:util/types" ***!
+  \**********************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:util/types");
+
+/***/ }),
+
+/***/ "node:worker_threads":
+/*!**************************************!*\
+  !*** external "node:worker_threads" ***!
+  \**************************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:worker_threads");
+
+/***/ }),
+
+/***/ "node:zlib":
+/*!****************************!*\
+  !*** external "node:zlib" ***!
+  \****************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:zlib");
+
+/***/ }),
+
 /***/ "(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fsync%2Froute&page=%2Fapi%2Fsync%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fsync%2Froute.ts&appDir=%2FUsers%2Fstephenjoshi%2FDesktop%2FCageClock%2Fsrc%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fstephenjoshi%2FDesktop%2FCageClock&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D!":
 /*!**********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** ./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fsync%2Froute&page=%2Fapi%2Fsync%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fsync%2Froute.ts&appDir=%2FUsers%2Fstephenjoshi%2FDesktop%2FCageClock%2Fsrc%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fstephenjoshi%2FDesktop%2FCageClock&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D! ***!
@@ -105,7 +391,7 @@ eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpac
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   GET: () => (/* binding */ GET)\n/* harmony export */ });\n/* harmony import */ var _supabase_supabase_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @supabase/supabase-js */ \"(rsc)/./node_modules/@supabase/supabase-js/dist/index.mjs\");\n/* harmony import */ var next_server__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! next/server */ \"(rsc)/./node_modules/next/dist/api/server.js\");\n\n\nconst supabase = (0,_supabase_supabase_js__WEBPACK_IMPORTED_MODULE_1__.createClient)(\"https://lbcvcaybimwuejabltap.supabase.co\", process.env.SUPABASE_SERVICE_ROLE_KEY);\nasync function GET() {\n    try {\n        // Fetch live MMA data from API-Sports\n        const response = await fetch('https://v1.mma.api-sports.io/fights?season=2023', {\n            headers: {\n                'x-apisports-key': process.env.API_SPORTS_KEY\n            }\n        });\n        if (!response.ok) {\n            const errorText = await response.text();\n            throw new Error(`API request failed: ${response.status} - ${errorText}`);\n        }\n        const data = await response.json();\n        console.log('API Response:', data);\n        console.log('Total events fetched:', data.response?.length || 0);\n        // Filter for UFC and Top Rank Boxing\n        const filteredEvents = data.response.filter((event)=>{\n            console.log('Event league:', event.league?.name);\n            return event.league?.name === 'UFC' || event.league?.name === 'Top Rank Boxing';\n        });\n        console.log('Filtered events:', filteredEvents.length);\n        const logs = [];\n        for (const event of filteredEvents){\n            // Upsert event\n            const { error: eventError } = await supabase.from('events').upsert({\n                id: event.id,\n                name: event.name,\n                league: event.league.name,\n                date: event.date,\n                status: event.status\n            });\n            if (eventError) {\n                console.error('Error upserting event:', eventError);\n                continue;\n            }\n            for (const fight of event.fights){\n                // Check current status for change detection\n                const { data: currentFight } = await supabase.from('fights').select('status').eq('id', fight.id).single();\n                if (currentFight && currentFight.status === 'live' && fight.status === 'finished') {\n                    logs.push(`Fight ${fight.id} (${fight.fighter_a} vs ${fight.fighter_b}) finished`);\n                }\n                // Upsert fight\n                const { error: fightError } = await supabase.from('fights').upsert({\n                    id: fight.id,\n                    event_id: event.id,\n                    fighter_a: fight.fighter_a,\n                    fighter_b: fight.fighter_b,\n                    order_index: fight.order_index,\n                    status: fight.status,\n                    current_round: fight.current_round,\n                    max_rounds: fight.max_rounds,\n                    updated_at: new Date().toISOString()\n                });\n                if (fightError) {\n                    console.error('Error upserting fight:', fightError);\n                }\n            }\n        }\n        return next_server__WEBPACK_IMPORTED_MODULE_0__.NextResponse.json({\n            message: 'Sync completed',\n            logs\n        });\n    } catch (error) {\n        console.error('Sync error:', error);\n        return next_server__WEBPACK_IMPORTED_MODULE_0__.NextResponse.json({\n            error: 'Sync failed'\n        }, {\n            status: 500\n        });\n    }\n}\n//# sourceURL=[module]\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,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QUFXO2dCQUNwQztnQkFFRixJQUFJUCxZQUFZO29CQUNkeEIsUUFBUVMsS0FBSyxDQUFDLDBCQUEwQmU7Z0JBQzFDO1lBQ0Y7UUFDRjtRQUVBLE9BQU8xQyxxREFBWUEsQ0FBQ2lCLElBQUksQ0FBQztZQUFFaUMsU0FBUztZQUFrQnhCO1FBQUs7SUFDN0QsRUFBRSxPQUFPQyxPQUFPO1FBQ2RULFFBQVFTLEtBQUssQ0FBQyxlQUFlQTtRQUM3QixPQUFPM0IscURBQVlBLENBQUNpQixJQUFJLENBQUM7WUFBRVUsT0FBTztRQUFjLEdBQUc7WUFBRVosUUFBUTtRQUFJO0lBQ25FO0FBQ0YiLCJzb3VyY2VzIjpbIi9Vc2Vycy9zdGVwaGVuam9zaGkvRGVza3RvcC9DYWdlQ2xvY2svc3JjL2FwcC9hcGkvc3luYy9yb3V0ZS50cyJdLCJzb3VyY2VzQ29udGVudCI6WyJpbXBvcnQgeyBjcmVhdGVDbGllbnQgfSBmcm9tICdAc3VwYWJhc2Uvc3VwYWJhc2UtanMnXG5pbXBvcnQgeyBOZXh0UmVzcG9uc2UgfSBmcm9tICduZXh0L3NlcnZlcidcblxuY29uc3Qgc3VwYWJhc2UgPSBjcmVhdGVDbGllbnQoXG4gIHByb2Nlc3MuZW52Lk5FWFRfUFVCTElDX1NVUEFCQVNFX1VSTCEsXG4gIHByb2Nlc3MuZW52LlNVUEFCQVNFX1NFUlZJQ0VfUk9MRV9LRVkhXG4pXG5cbmV4cG9ydCBhc3luYyBmdW5jdGlvbiBHRVQoKSB7XG4gIHRyeSB7XG4gICAgLy8gRmV0Y2ggbGl2ZSBNTUEgZGF0YSBmcm9tIEFQSS1TcG9ydHNcbiAgICBjb25zdCByZXNwb25zZSA9IGF3YWl0IGZldGNoKCdodHRwczovL3YxLm1tYS5hcGktc3BvcnRzLmlvL2ZpZ2h0cz9zZWFzb249MjAyMycsIHtcbiAgICAgIGhlYWRlcnM6IHtcbiAgICAgICAgJ3gtYXBpc3BvcnRzLWtleSc6IHByb2Nlc3MuZW52LkFQSV9TUE9SVFNfS0VZIVxuICAgICAgfVxuICAgIH0pXG5cbiAgICBpZiAoIXJlc3BvbnNlLm9rKSB7XG4gICAgICBjb25zdCBlcnJvclRleHQgPSBhd2FpdCByZXNwb25zZS50ZXh0KClcbiAgICAgIHRocm93IG5ldyBFcnJvcihgQVBJIHJlcXVlc3QgZmFpbGVkOiAke3Jlc3BvbnNlLnN0YXR1c30gLSAke2Vycm9yVGV4dH1gKVxuICAgIH1cblxuICAgIGNvbnN0IGRhdGEgPSBhd2FpdCByZXNwb25zZS5qc29uKClcblxuICAgIGNvbnNvbGUubG9nKCdBUEkgUmVzcG9uc2U6JywgZGF0YSlcbiAgICBjb25zb2xlLmxvZygnVG90YWwgZXZlbnRzIGZldGNoZWQ6JywgZGF0YS5yZXNwb25zZT8ubGVuZ3RoIHx8IDApXG5cbiAgICAvLyBGaWx0ZXIgZm9yIFVGQyBhbmQgVG9wIFJhbmsgQm94aW5nXG4gICAgY29uc3QgZmlsdGVyZWRFdmVudHMgPSBkYXRhLnJlc3BvbnNlLmZpbHRlcigoZXZlbnQ6IGFueSkgPT4ge1xuICAgICAgY29uc29sZS5sb2coJ0V2ZW50IGxlYWd1ZTonLCBldmVudC5sZWFndWU/Lm5hbWUpXG4gICAgICByZXR1cm4gZXZlbnQubGVhZ3VlPy5uYW1lID09PSAnVUZDJyB8fCBldmVudC5sZWFndWU/Lm5hbWUgPT09ICdUb3AgUmFuayBCb3hpbmcnXG4gICAgfSlcblxuICAgIGNvbnNvbGUubG9nKCdGaWx0ZXJlZCBldmVudHM6JywgZmlsdGVyZWRFdmVudHMubGVuZ3RoKVxuXG4gICAgY29uc3QgbG9nczogc3RyaW5nW10gPSBbXVxuXG4gICAgZm9yIChjb25zdCBldmVudCBvZiBmaWx0ZXJlZEV2ZW50cykge1xuICAgICAgLy8gVXBzZXJ0IGV2ZW50XG4gICAgICBjb25zdCB7IGVycm9yOiBldmVudEVycm9yIH0gPSBhd2FpdCBzdXBhYmFzZVxuICAgICAgICAuZnJvbSgnZXZlbnRzJylcbiAgICAgICAgLnVwc2VydCh7XG4gICAgICAgICAgaWQ6IGV2ZW50LmlkLFxuICAgICAgICAgIG5hbWU6IGV2ZW50Lm5hbWUsXG4gICAgICAgICAgbGVhZ3VlOiBldmVudC5sZWFndWUubmFtZSxcbiAgICAgICAgICBkYXRlOiBldmVudC5kYXRlLFxuICAgICAgICAgIHN0YXR1czogZXZlbnQuc3RhdHVzXG4gICAgICAgIH0pXG5cbiAgICAgIGlmIChldmVudEVycm9yKSB7XG4gICAgICAgIGNvbnNvbGUuZXJyb3IoJ0Vycm9yIHVwc2VydGluZyBldmVudDonLCBldmVudEVycm9yKVxuICAgICAgICBjb250aW51ZVxuICAgICAgfVxuXG4gICAgICBmb3IgKGNvbnN0IGZpZ2h0IG9mIGV2ZW50LmZpZ2h0cykge1xuICAgICAgICAvLyBDaGVjayBjdXJyZW50IHN0YXR1cyBmb3IgY2hhbmdlIGRldGVjdGlvblxuICAgICAgICBjb25zdCB7IGRhdGE6IGN1cnJlbnRGaWdodCB9ID0gYXdhaXQgc3VwYWJhc2VcbiAgICAgICAgICAuZnJvbSgnZmlnaHRzJylcbiAgICAgICAgICAuc2VsZWN0KCdzdGF0dXMnKVxuICAgICAgICAgIC5lcSgnaWQnLCBmaWdodC5pZClcbiAgICAgICAgICAuc2luZ2xlKClcblxuICAgICAgICBpZiAoY3VycmVudEZpZ2h0ICYmIGN1cnJlbnRGaWdodC5zdGF0dXMgPT09ICdsaXZlJyAmJiBmaWdodC5zdGF0dXMgPT09ICdmaW5pc2hlZCcpIHtcbiAgICAgICAgICBsb2dzLnB1c2goYEZpZ2h0ICR7ZmlnaHQuaWR9ICgke2ZpZ2h0LmZpZ2h0ZXJfYX0gdnMgJHtmaWdodC5maWdodGVyX2J9KSBmaW5pc2hlZGApXG4gICAgICAgIH1cblxuICAgICAgICAvLyBVcHNlcnQgZmlnaHRcbiAgICAgICAgY29uc3QgeyBlcnJvcjogZmlnaHRFcnJvciB9ID0gYXdhaXQgc3VwYWJhc2VcbiAgICAgICAgICAuZnJvbSgnZmlnaHRzJylcbiAgICAgICAgICAudXBzZXJ0KHtcbiAgICAgICAgICAgIGlkOiBmaWdodC5pZCxcbiAgICAgICAgICAgIGV2ZW50X2lkOiBldmVudC5pZCxcbiAgICAgICAgICAgIGZpZ2h0ZXJfYTogZmlnaHQuZmlnaHRlcl9hLFxuICAgICAgICAgICAgZmlnaHRlcl9iOiBmaWdodC5maWdodGVyX2IsXG4gICAgICAgICAgICBvcmRlcl9pbmRleDogZmlnaHQub3JkZXJfaW5kZXgsXG4gICAgICAgICAgICBzdGF0dXM6IGZpZ2h0LnN0YXR1cyxcbiAgICAgICAgICAgIGN1cnJlbnRfcm91bmQ6IGZpZ2h0LmN1cnJlbnRfcm91bmQsXG4gICAgICAgICAgICBtYXhfcm91bmRzOiBmaWdodC5tYXhfcm91bmRzLFxuICAgICAgICAgICAgdXBkYXRlZF9hdDogbmV3IERhdGUoKS50b0lTT1N0cmluZygpXG4gICAgICAgICAgfSlcblxuICAgICAgICBpZiAoZmlnaHRFcnJvcikge1xuICAgICAgICAgIGNvbnNvbGUuZXJyb3IoJ0Vycm9yIHVwc2VydGluZyBmaWdodDonLCBmaWdodEVycm9yKVxuICAgICAgICB9XG4gICAgICB9XG4gICAgfVxuXG4gICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsgbWVzc2FnZTogJ1N5bmMgY29tcGxldGVkJywgbG9ncyB9KVxuICB9IGNhdGNoIChlcnJvcikge1xuICAgIGNvbnNvbGUuZXJyb3IoJ1N5bmMgZXJyb3I6JywgZXJyb3IpXG4gICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsgZXJyb3I6ICdTeW5jIGZhaWxlZCcgfSwgeyBzdGF0dXM6IDUwMCB9KVxuICB9XG59Il0sIm5hbWVzIjpbImNyZWF0ZUNsaWVudCIsIk5leHRSZXNwb25zZSIsInN1cGFiYXNlIiwicHJvY2VzcyIsImVudiIsIk5FWFRfUFVCTElDX1NVUEFCQVNFX1VSTCIsIlNVUEFCQVNFX1NFUlZJQ0VfUk9MRV9LRVkiLCJHRVQiLCJyZXNwb25zZSIsImZldGNoIiwiaGVhZGVycyIsIkFQSV9TUE9SVFNfS0VZIiwib2siLCJlcnJvclRleHQiLCJ0ZXh0IiwiRXJyb3IiLCJzdGF0dXMiLCJkYXRhIiwianNvbiIsImNvbnNvbGUiLCJsb2ciLCJsZW5ndGgiLCJmaWx0ZXJlZEV2ZW50cyIsImZpbHRlciIsImV2ZW50IiwibGVhZ3VlIiwibmFtZSIsImxvZ3MiLCJlcnJvciIsImV2ZW50RXJyb3IiLCJmcm9tIiwidXBzZXJ0IiwiaWQiLCJkYXRlIiwiZmlnaHQiLCJmaWdodHMiLCJjdXJyZW50RmlnaHQiLCJzZWxlY3QiLCJlcSIsInNpbmdsZSIsInB1c2giLCJmaWdodGVyX2EiLCJmaWdodGVyX2IiLCJmaWdodEVycm9yIiwiZXZlbnRfaWQiLCJvcmRlcl9pbmRleCIsImN1cnJlbnRfcm91bmQiLCJtYXhfcm91bmRzIiwidXBkYXRlZF9hdCIsIkRhdGUiLCJ0b0lTT1N0cmluZyIsIm1lc3NhZ2UiXSwiaWdub3JlTGlzdCI6W10sInNvdXJjZVJvb3QiOiIifQ==\n//# sourceURL=webpack-internal:///(rsc)/./src/app/api/sync/route.ts\n");
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   GET: () => (/* binding */ GET)\n/* harmony export */ });\n/* harmony import */ var next_server__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! next/server */ \"(rsc)/./node_modules/next/dist/api/server.js\");\n/* harmony import */ var cheerio__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! cheerio */ \"(rsc)/./node_modules/cheerio/dist/esm/index.js\");\n\n\nasync function GET() {\n    try {\n        // Scrape upcoming MMA events from Tapology\n        const response = await fetch('https://www.tapology.com/fightcenter', {\n            headers: {\n                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'\n            }\n        });\n        if (!response.ok) {\n            throw new Error(`Fetch failed: ${response.status}`);\n        }\n        const html = await response.text();\n        console.log('HTML length:', html.length);\n        const $ = cheerio__WEBPACK_IMPORTED_MODULE_1__.load(html);\n        const events = [];\n        // Find event previews\n        console.log('Found divs:', $('div[id^=\"preview\"]').length);\n        $('span a[href*=\"/fightcenter/events/\"]').each((index, element)=>{\n            const eventLink = $(element).attr('href');\n            if (eventLink) {\n                const eventName = $(element).text().trim();\n                const eventId = eventLink.split('/').pop();\n                events.push({\n                    id: eventId,\n                    name: eventName,\n                    league: 'MMA',\n                    date: null,\n                    status: 'scheduled'\n                });\n            }\n        });\n        console.log('Events scraped:', events);\n        const logs = [];\n        const allFights = [];\n        for (const event of events.slice(0, 2)){\n            logs.push(`Event ${event.name} synced`);\n            // Mock fights for testing\n            const fights = [\n                {\n                    id: `${event.id}-1`,\n                    event_id: event.id,\n                    fighter_a: 'Alexandre Pantoja',\n                    fighter_b: 'Kai Asakura',\n                    order_index: 0,\n                    status: 'scheduled',\n                    current_round: null,\n                    max_rounds: 5,\n                    updated_at: new Date().toISOString()\n                },\n                {\n                    id: `${event.id}-2`,\n                    event_id: event.id,\n                    fighter_a: 'Jon Jones',\n                    fighter_b: 'Stipe Miocic',\n                    order_index: 1,\n                    status: 'scheduled',\n                    current_round: null,\n                    max_rounds: 5,\n                    updated_at: new Date().toISOString()\n                }\n            ];\n            allFights.push(...fights);\n            logs.push(`Event ${event.name} with ${fights.length} fights synced`);\n        }\n        return next_server__WEBPACK_IMPORTED_MODULE_0__.NextResponse.json({\n            message: 'Sync completed',\n            events,\n            fights: allFights,\n            logs\n        });\n    } catch (error) {\n        console.error('Sync error:', error);\n        return next_server__WEBPACK_IMPORTED_MODULE_0__.NextResponse.json({\n            error: 'Sync failed'\n        }, {\n            status: 500\n        });\n    }\n}\n//# sourceURL=[module]\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiKHJzYykvLi9zcmMvYXBwL2FwaS9zeW5jL3JvdXRlLnRzIiwibWFwcGluZ3MiOiI7Ozs7OztBQUEwQztBQUNSO0FBRTNCLGVBQWVFO0lBQ3BCLElBQUk7UUFDRiwyQ0FBMkM7UUFDM0MsTUFBTUMsV0FBVyxNQUFNQyxNQUFNLHdDQUF3QztZQUNuRUMsU0FBUztnQkFDUCxjQUFjO1lBQ2hCO1FBQ0Y7UUFDQSxJQUFJLENBQUNGLFNBQVNHLEVBQUUsRUFBRTtZQUNoQixNQUFNLElBQUlDLE1BQU0sQ0FBQyxjQUFjLEVBQUVKLFNBQVNLLE1BQU0sRUFBRTtRQUNwRDtRQUNBLE1BQU1DLE9BQU8sTUFBTU4sU0FBU08sSUFBSTtRQUNoQ0MsUUFBUUMsR0FBRyxDQUFDLGdCQUFnQkgsS0FBS0ksTUFBTTtRQUN2QyxNQUFNQyxJQUFJYix5Q0FBWSxDQUFDUTtRQUV2QixNQUFNTyxTQUFnQixFQUFFO1FBRXhCLHNCQUFzQjtRQUN0QkwsUUFBUUMsR0FBRyxDQUFDLGVBQWVFLEVBQUUsc0JBQXNCRCxNQUFNO1FBQ3pEQyxFQUFFLHdDQUF3Q0csSUFBSSxDQUFDLENBQUNDLE9BQU9DO1lBQ3JELE1BQU1DLFlBQVlOLEVBQUVLLFNBQVNFLElBQUksQ0FBQztZQUNsQyxJQUFJRCxXQUFXO2dCQUNiLE1BQU1FLFlBQVlSLEVBQUVLLFNBQVNULElBQUksR0FBR2EsSUFBSTtnQkFDeEMsTUFBTUMsVUFBVUosVUFBVUssS0FBSyxDQUFDLEtBQUtDLEdBQUc7Z0JBRXhDVixPQUFPVyxJQUFJLENBQUM7b0JBQ1ZDLElBQUlKO29CQUNKSyxNQUFNUDtvQkFDTlEsUUFBUTtvQkFDUkMsTUFBTTtvQkFDTnZCLFFBQVE7Z0JBQ1Y7WUFDRjtRQUNGO1FBRUFHLFFBQVFDLEdBQUcsQ0FBQyxtQkFBbUJJO1FBRS9CLE1BQU1nQixPQUFpQixFQUFFO1FBQ3pCLE1BQU1DLFlBQW1CLEVBQUU7UUFFM0IsS0FBSyxNQUFNQyxTQUFTbEIsT0FBT21CLEtBQUssQ0FBQyxHQUFHLEdBQUk7WUFDdENILEtBQUtMLElBQUksQ0FBQyxDQUFDLE1BQU0sRUFBRU8sTUFBTUwsSUFBSSxDQUFDLE9BQU8sQ0FBQztZQUV0QywwQkFBMEI7WUFDMUIsTUFBTU8sU0FBZ0I7Z0JBQ3BCO29CQUNFUixJQUFJLEdBQUdNLE1BQU1OLEVBQUUsQ0FBQyxFQUFFLENBQUM7b0JBQ25CUyxVQUFVSCxNQUFNTixFQUFFO29CQUNsQlUsV0FBVztvQkFDWEMsV0FBVztvQkFDWEMsYUFBYTtvQkFDYmhDLFFBQVE7b0JBQ1JpQyxlQUFlO29CQUNmQyxZQUFZO29CQUNaQyxZQUFZLElBQUlDLE9BQU9DLFdBQVc7Z0JBQ3BDO2dCQUNBO29CQUNFakIsSUFBSSxHQUFHTSxNQUFNTixFQUFFLENBQUMsRUFBRSxDQUFDO29CQUNuQlMsVUFBVUgsTUFBTU4sRUFBRTtvQkFDbEJVLFdBQVc7b0JBQ1hDLFdBQVc7b0JBQ1hDLGFBQWE7b0JBQ2JoQyxRQUFRO29CQUNSaUMsZUFBZTtvQkFDZkMsWUFBWTtvQkFDWkMsWUFBWSxJQUFJQyxPQUFPQyxXQUFXO2dCQUNwQzthQUNEO1lBRURaLFVBQVVOLElBQUksSUFBSVM7WUFDbEJKLEtBQUtMLElBQUksQ0FBQyxDQUFDLE1BQU0sRUFBRU8sTUFBTUwsSUFBSSxDQUFDLE1BQU0sRUFBRU8sT0FBT3ZCLE1BQU0sQ0FBQyxjQUFjLENBQUM7UUFDckU7UUFFQSxPQUFPYixxREFBWUEsQ0FBQzhDLElBQUksQ0FBQztZQUFFQyxTQUFTO1lBQWtCL0I7WUFBUW9CLFFBQVFIO1lBQVdEO1FBQUs7SUFDeEYsRUFBRSxPQUFPZ0IsT0FBTztRQUNkckMsUUFBUXFDLEtBQUssQ0FBQyxlQUFlQTtRQUM3QixPQUFPaEQscURBQVlBLENBQUM4QyxJQUFJLENBQUM7WUFBRUUsT0FBTztRQUFjLEdBQUc7WUFBRXhDLFFBQVE7UUFBSTtJQUNuRTtBQUNGIiwic291cmNlcyI6WyIvVXNlcnMvc3RlcGhlbmpvc2hpL0Rlc2t0b3AvQ2FnZUNsb2NrL3NyYy9hcHAvYXBpL3N5bmMvcm91dGUudHMiXSwic291cmNlc0NvbnRlbnQiOlsiaW1wb3J0IHsgTmV4dFJlc3BvbnNlIH0gZnJvbSAnbmV4dC9zZXJ2ZXInXG5pbXBvcnQgKiBhcyBjaGVlcmlvIGZyb20gJ2NoZWVyaW8nXG5cbmV4cG9ydCBhc3luYyBmdW5jdGlvbiBHRVQoKSB7XG4gIHRyeSB7XG4gICAgLy8gU2NyYXBlIHVwY29taW5nIE1NQSBldmVudHMgZnJvbSBUYXBvbG9neVxuICAgIGNvbnN0IHJlc3BvbnNlID0gYXdhaXQgZmV0Y2goJ2h0dHBzOi8vd3d3LnRhcG9sb2d5LmNvbS9maWdodGNlbnRlcicsIHtcbiAgICAgIGhlYWRlcnM6IHtcbiAgICAgICAgJ1VzZXItQWdlbnQnOiAnTW96aWxsYS81LjAgKFdpbmRvd3MgTlQgMTAuMDsgV2luNjQ7IHg2NCkgQXBwbGVXZWJLaXQvNTM3LjM2IChLSFRNTCwgbGlrZSBHZWNrbykgQ2hyb21lLzkxLjAuNDQ3Mi4xMjQgU2FmYXJpLzUzNy4zNidcbiAgICAgIH1cbiAgICB9KVxuICAgIGlmICghcmVzcG9uc2Uub2spIHtcbiAgICAgIHRocm93IG5ldyBFcnJvcihgRmV0Y2ggZmFpbGVkOiAke3Jlc3BvbnNlLnN0YXR1c31gKVxuICAgIH1cbiAgICBjb25zdCBodG1sID0gYXdhaXQgcmVzcG9uc2UudGV4dCgpXG4gICAgY29uc29sZS5sb2coJ0hUTUwgbGVuZ3RoOicsIGh0bWwubGVuZ3RoKVxuICAgIGNvbnN0ICQgPSBjaGVlcmlvLmxvYWQoaHRtbClcblxuICAgIGNvbnN0IGV2ZW50czogYW55W10gPSBbXVxuXG4gICAgLy8gRmluZCBldmVudCBwcmV2aWV3c1xuICAgIGNvbnNvbGUubG9nKCdGb3VuZCBkaXZzOicsICQoJ2RpdltpZF49XCJwcmV2aWV3XCJdJykubGVuZ3RoKVxuICAgICQoJ3NwYW4gYVtocmVmKj1cIi9maWdodGNlbnRlci9ldmVudHMvXCJdJykuZWFjaCgoaW5kZXgsIGVsZW1lbnQpID0+IHtcbiAgICAgIGNvbnN0IGV2ZW50TGluayA9ICQoZWxlbWVudCkuYXR0cignaHJlZicpXG4gICAgICBpZiAoZXZlbnRMaW5rKSB7XG4gICAgICAgIGNvbnN0IGV2ZW50TmFtZSA9ICQoZWxlbWVudCkudGV4dCgpLnRyaW0oKVxuICAgICAgICBjb25zdCBldmVudElkID0gZXZlbnRMaW5rLnNwbGl0KCcvJykucG9wKClcblxuICAgICAgICBldmVudHMucHVzaCh7XG4gICAgICAgICAgaWQ6IGV2ZW50SWQsXG4gICAgICAgICAgbmFtZTogZXZlbnROYW1lLFxuICAgICAgICAgIGxlYWd1ZTogJ01NQScsXG4gICAgICAgICAgZGF0ZTogbnVsbCxcbiAgICAgICAgICBzdGF0dXM6ICdzY2hlZHVsZWQnXG4gICAgICAgIH0pXG4gICAgICB9XG4gICAgfSlcblxuICAgIGNvbnNvbGUubG9nKCdFdmVudHMgc2NyYXBlZDonLCBldmVudHMpXG5cbiAgICBjb25zdCBsb2dzOiBzdHJpbmdbXSA9IFtdXG4gICAgY29uc3QgYWxsRmlnaHRzOiBhbnlbXSA9IFtdXG5cbiAgICBmb3IgKGNvbnN0IGV2ZW50IG9mIGV2ZW50cy5zbGljZSgwLCAyKSkgeyAvLyBMaW1pdCB0byAyIGZvciB0ZXN0aW5nXG4gICAgICBsb2dzLnB1c2goYEV2ZW50ICR7ZXZlbnQubmFtZX0gc3luY2VkYClcblxuICAgICAgLy8gTW9jayBmaWdodHMgZm9yIHRlc3RpbmdcbiAgICAgIGNvbnN0IGZpZ2h0czogYW55W10gPSBbXG4gICAgICAgIHtcbiAgICAgICAgICBpZDogYCR7ZXZlbnQuaWR9LTFgLFxuICAgICAgICAgIGV2ZW50X2lkOiBldmVudC5pZCxcbiAgICAgICAgICBmaWdodGVyX2E6ICdBbGV4YW5kcmUgUGFudG9qYScsXG4gICAgICAgICAgZmlnaHRlcl9iOiAnS2FpIEFzYWt1cmEnLFxuICAgICAgICAgIG9yZGVyX2luZGV4OiAwLFxuICAgICAgICAgIHN0YXR1czogJ3NjaGVkdWxlZCcsXG4gICAgICAgICAgY3VycmVudF9yb3VuZDogbnVsbCxcbiAgICAgICAgICBtYXhfcm91bmRzOiA1LFxuICAgICAgICAgIHVwZGF0ZWRfYXQ6IG5ldyBEYXRlKCkudG9JU09TdHJpbmcoKVxuICAgICAgICB9LFxuICAgICAgICB7XG4gICAgICAgICAgaWQ6IGAke2V2ZW50LmlkfS0yYCxcbiAgICAgICAgICBldmVudF9pZDogZXZlbnQuaWQsXG4gICAgICAgICAgZmlnaHRlcl9hOiAnSm9uIEpvbmVzJyxcbiAgICAgICAgICBmaWdodGVyX2I6ICdTdGlwZSBNaW9jaWMnLFxuICAgICAgICAgIG9yZGVyX2luZGV4OiAxLFxuICAgICAgICAgIHN0YXR1czogJ3NjaGVkdWxlZCcsXG4gICAgICAgICAgY3VycmVudF9yb3VuZDogbnVsbCxcbiAgICAgICAgICBtYXhfcm91bmRzOiA1LFxuICAgICAgICAgIHVwZGF0ZWRfYXQ6IG5ldyBEYXRlKCkudG9JU09TdHJpbmcoKVxuICAgICAgICB9XG4gICAgICBdXG5cbiAgICAgIGFsbEZpZ2h0cy5wdXNoKC4uLmZpZ2h0cylcbiAgICAgIGxvZ3MucHVzaChgRXZlbnQgJHtldmVudC5uYW1lfSB3aXRoICR7ZmlnaHRzLmxlbmd0aH0gZmlnaHRzIHN5bmNlZGApXG4gICAgfVxuXG4gICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsgbWVzc2FnZTogJ1N5bmMgY29tcGxldGVkJywgZXZlbnRzLCBmaWdodHM6IGFsbEZpZ2h0cywgbG9ncyB9KVxuICB9IGNhdGNoIChlcnJvcikge1xuICAgIGNvbnNvbGUuZXJyb3IoJ1N5bmMgZXJyb3I6JywgZXJyb3IpXG4gICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsgZXJyb3I6ICdTeW5jIGZhaWxlZCcgfSwgeyBzdGF0dXM6IDUwMCB9KVxuICB9XG59Il0sIm5hbWVzIjpbIk5leHRSZXNwb25zZSIsImNoZWVyaW8iLCJHRVQiLCJyZXNwb25zZSIsImZldGNoIiwiaGVhZGVycyIsIm9rIiwiRXJyb3IiLCJzdGF0dXMiLCJodG1sIiwidGV4dCIsImNvbnNvbGUiLCJsb2ciLCJsZW5ndGgiLCIkIiwibG9hZCIsImV2ZW50cyIsImVhY2giLCJpbmRleCIsImVsZW1lbnQiLCJldmVudExpbmsiLCJhdHRyIiwiZXZlbnROYW1lIiwidHJpbSIsImV2ZW50SWQiLCJzcGxpdCIsInBvcCIsInB1c2giLCJpZCIsIm5hbWUiLCJsZWFndWUiLCJkYXRlIiwibG9ncyIsImFsbEZpZ2h0cyIsImV2ZW50Iiwic2xpY2UiLCJmaWdodHMiLCJldmVudF9pZCIsImZpZ2h0ZXJfYSIsImZpZ2h0ZXJfYiIsIm9yZGVyX2luZGV4IiwiY3VycmVudF9yb3VuZCIsIm1heF9yb3VuZHMiLCJ1cGRhdGVkX2F0IiwiRGF0ZSIsInRvSVNPU3RyaW5nIiwianNvbiIsIm1lc3NhZ2UiLCJlcnJvciJdLCJpZ25vcmVMaXN0IjpbXSwic291cmNlUm9vdCI6IiJ9\n//# sourceURL=webpack-internal:///(rsc)/./src/app/api/sync/route.ts\n");
 
 /***/ })
 
@@ -116,7 +402,7 @@ eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpac
 var __webpack_require__ = require("../../../webpack-runtime.js");
 __webpack_require__.C(exports);
 var __webpack_exec__ = (moduleId) => (__webpack_require__(__webpack_require__.s = moduleId))
-var __webpack_exports__ = __webpack_require__.X(0, ["vendor-chunks/next","vendor-chunks/@supabase","vendor-chunks/tslib","vendor-chunks/iceberg-js"], () => (__webpack_exec__("(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fsync%2Froute&page=%2Fapi%2Fsync%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fsync%2Froute.ts&appDir=%2FUsers%2Fstephenjoshi%2FDesktop%2FCageClock%2Fsrc%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fstephenjoshi%2FDesktop%2FCageClock&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D!")));
+var __webpack_exports__ = __webpack_require__.X(0, ["vendor-chunks/next","vendor-chunks/undici","vendor-chunks/iconv-lite","vendor-chunks/parse5","vendor-chunks/cheerio","vendor-chunks/css-select","vendor-chunks/entities","vendor-chunks/domutils","vendor-chunks/htmlparser2","vendor-chunks/whatwg-mimetype","vendor-chunks/nth-check","vendor-chunks/cheerio-select","vendor-chunks/whatwg-encoding","vendor-chunks/encoding-sniffer","vendor-chunks/domhandler","vendor-chunks/dom-serializer","vendor-chunks/css-what","vendor-chunks/parse5-parser-stream","vendor-chunks/parse5-htmlparser2-tree-adapter","vendor-chunks/domelementtype","vendor-chunks/safer-buffer","vendor-chunks/boolbase"], () => (__webpack_exec__("(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fsync%2Froute&page=%2Fapi%2Fsync%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fsync%2Froute.ts&appDir=%2FUsers%2Fstephenjoshi%2FDesktop%2FCageClock%2Fsrc%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fstephenjoshi%2FDesktop%2FCageClock&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D!")));
 module.exports = __webpack_exports__;
 
 })();
