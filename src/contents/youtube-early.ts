@@ -9,16 +9,22 @@ export const config: PlasmoCSConfig = {
   all_frames: false
 }
 
-// Immediately check storage and inject CSS synchronously
-const STYLE_ID = "cageclock-early-hide"
+// Style IDs for our injected CSS
+const EARLY_STYLE_ID = "cageclock-early-hide"
+const MAIN_STYLE_ID = "cageclock-focus-style"
 
 // Check if focus mode is enabled via chrome.storage
 async function checkAndInjectEarly() {
   try {
     const result = await chrome.storage.local.get(["isEnabled"])
     
-    if (result.isEnabled) {
+    // Handle both boolean and string values (Plasmo storage can store as string)
+    const isEnabled = result.isEnabled === true || result.isEnabled === "true"
+    
+    if (isEnabled) {
       injectEarlyHideCSS()
+    } else {
+      removeAllCSS()
     }
   } catch (error) {
     console.error("[CageClock] Error checking storage:", error)
@@ -27,7 +33,7 @@ async function checkAndInjectEarly() {
 
 function injectEarlyHideCSS() {
   // Skip if already injected
-  if (document.getElementById(STYLE_ID)) return
+  if (document.getElementById(EARLY_STYLE_ID)) return
   
   const css = `
     /* CageClock Early Injection - Prevent Flicker */
@@ -61,34 +67,51 @@ function injectEarlyHideCSS() {
   `
   
   const style = document.createElement("style")
-  style.id = STYLE_ID
+  style.id = EARLY_STYLE_ID
   style.textContent = css
   
   // Insert into documentElement immediately (before head exists)
-  ;(document.head || document.documentElement).appendChild(style)
+  const target = document.head || document.documentElement
+  if (target) {
+    target.appendChild(style)
+    console.log("[CageClock] Early hide CSS injected")
+  }
+}
+
+function removeAllCSS() {
+  // Remove early hide CSS
+  const earlyStyle = document.getElementById(EARLY_STYLE_ID)
+  if (earlyStyle) {
+    earlyStyle.remove()
+    console.log("[CageClock] Early hide CSS removed")
+  }
   
-  console.log("[CageClock] Early hide CSS injected")
+  // Also remove main focus style if it exists
+  const mainStyle = document.getElementById(MAIN_STYLE_ID)
+  if (mainStyle) {
+    mainStyle.remove()
+    console.log("[CageClock] Main focus CSS removed")
+  }
 }
 
 // Run immediately
 checkAndInjectEarly()
 
-// Also listen for storage changes to update in real-time
+// Listen for storage changes to update in real-time
 chrome.storage.onChanged.addListener((changes, areaName) => {
   if (areaName !== "local") return
   
   if ("isEnabled" in changes) {
-    const styleEl = document.getElementById(STYLE_ID)
+    // Handle both boolean and string values
+    const newValue = changes.isEnabled.newValue
+    const isEnabled = newValue === true || newValue === "true"
     
-    if (changes.isEnabled.newValue) {
-      if (!styleEl) {
-        injectEarlyHideCSS()
-      }
+    console.log("[CageClock] Storage changed, isEnabled:", isEnabled)
+    
+    if (isEnabled) {
+      injectEarlyHideCSS()
     } else {
-      if (styleEl) {
-        styleEl.remove()
-        console.log("[CageClock] Early hide CSS removed")
-      }
+      removeAllCSS()
     }
   }
 })

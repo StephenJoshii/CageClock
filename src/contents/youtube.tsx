@@ -125,11 +125,18 @@ function injectCSS(css: string) {
   styleEl.textContent = css
 }
 
-// Remove injected CSS
+// Remove all injected CSS (both early and main)
 function removeCSS() {
+  // Remove main focus style
   const styleEl = document.getElementById(STYLE_ID)
   if (styleEl) {
     styleEl.remove()
+  }
+  
+  // Also remove early hide style to ensure complete cleanup
+  const earlyStyleEl = document.getElementById("cageclock-early-hide")
+  if (earlyStyleEl) {
+    earlyStyleEl.remove()
   }
 }
 
@@ -141,6 +148,8 @@ function YouTubeContentScript() {
   })
 
   useEffect(() => {
+    console.log("[CageClock] useEffect triggered, isEnabled:", isEnabled)
+    
     if (isEnabled) {
       const css = generateHideCSS(true)
       injectCSS(css)

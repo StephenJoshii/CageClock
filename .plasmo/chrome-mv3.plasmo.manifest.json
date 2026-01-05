@@ -19,7 +19,7 @@
   },
   "version": "0.0.1",
   "author": "",
-  "name": "DEV | CageClock - Focus Extension",
+  "name": "CageClock - Focus Extension",
   "description": "A Chrome extension to help you stay focused on your chosen topic",
   "background": {
     "service_worker": "./static/background/index.ts"
