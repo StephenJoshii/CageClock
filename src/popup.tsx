@@ -1,17 +1,20 @@
 import { useEffect, useState } from "react"
 
 import { getSettings, setEnabled, setFocusTopic } from "./storage"
+import { STORAGE_KEYS } from "./storage"
 
 import "./popup.css"
 
 function IndexPopup() {
   const [isEnabled, setIsEnabled] = useState(false)
-  const [topic, setTopic] = useState("")
+  const [topics, setTopics] = useState<string[]>([])
+  const [inputValue, setInputValue] = useState("")
   const [isSaving, setIsSaving] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [apiKey, setApiKey] = useState("")
   const [hasApiKey, setHasApiKey] = useState(false)
   const [apiKeyStatus, setApiKeyStatus] = useState("")
+  const [videosFiltered, setVideosFiltered] = useState(0)
   
   // Break mode state
   const [isOnBreak, setIsOnBreak] = useState(false)
@@ -22,7 +25,11 @@ function IndexPopup() {
     // Load saved settings on mount
     getSettings().then((settings) => {
       setIsEnabled(settings.isEnabled)
-      setTopic(settings.focusTopic)
+      // Parse topics from comma-separated string
+      if (settings.focusTopic) {
+        const savedTopics = settings.focusTopic.split(",").map(t => t.trim()).filter(t => t)
+        setTopics(savedTopics)
+      }
     })
     
     // Check if API key is configured
@@ -30,6 +37,11 @@ function IndexPopup() {
       if (response?.success) {
         setHasApiKey(response.hasApiKey)
       }
+    })
+    
+    // Load videos filtered count
+    chrome.storage.local.get([STORAGE_KEYS.VIDEOS_FILTERED_TODAY || "videosFilteredToday"], (result) => {
+      setVideosFiltered(result.videosFilteredToday || 0)
     })
     
     // Check break status
@@ -80,22 +92,40 @@ function IndexPopup() {
     setIsSaving(false)
   }
 
-  const handleTopicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setTopic(e.target.value)
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value)
   }
 
-  const handleTopicBlur = async () => {
-    setIsSaving(true)
-    await setFocusTopic(topic)
-    setIsSaving(false)
-  }
-
-  const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
+  const handleInputKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && inputValue.trim()) {
+      e.preventDefault()
+      const newTopic = inputValue.trim()
+      if (!topics.includes(newTopic)) {
+        const newTopics = [...topics, newTopic]
+        setTopics(newTopics)
+        setInputValue("")
+        setIsSaving(true)
+        await setFocusTopic(newTopics.join(", "))
+        setIsSaving(false)
+      } else {
+        setInputValue("")
+      }
+    } else if (e.key === "Backspace" && inputValue === "" && topics.length > 0) {
+      // Remove last chip on backspace if input is empty
+      const newTopics = topics.slice(0, -1)
+      setTopics(newTopics)
       setIsSaving(true)
-      await setFocusTopic(topic)
+      await setFocusTopic(newTopics.join(", "))
       setIsSaving(false)
     }
+  }
+
+  const removeChip = async (topicToRemove: string) => {
+    const newTopics = topics.filter(t => t !== topicToRemove)
+    setTopics(newTopics)
+    setIsSaving(true)
+    await setFocusTopic(newTopics.join(", "))
+    setIsSaving(false)
   }
 
   const handleSaveApiKey = () => {
@@ -145,43 +175,65 @@ function IndexPopup() {
 
   return (
     <div className="popup-container">
+      {/* Status Indicator */}
+      {isEnabled && (
+        <div className="status-indicator">
+          <span className="status-pulse"></span>
+          <span className="status-text">Algorithm: Redirected</span>
+        </div>
+      )}
+
       <header className="popup-header">
         <h1>CageClock</h1>
         <p className="subtitle">Stay focused on what matters</p>
       </header>
 
       <main className="popup-content">
+        {/* Focus Mode Toggle - iOS/Material Style */}
         <div className="setting-row">
           <label className="setting-label" htmlFor="focus-toggle">
             Focus Mode
           </label>
           <button
             id="focus-toggle"
-            className={`toggle-switch ${isEnabled ? "active" : ""}`}
+            className={`material-toggle ${isEnabled ? "active" : ""}`}
             onClick={handleToggle}
             aria-pressed={isEnabled}
             aria-label={isEnabled ? "Turn off focus mode" : "Turn on focus mode"}>
-            <span className="toggle-slider"></span>
-            <span className="toggle-text">{isEnabled ? "ON" : "OFF"}</span>
+            <span className="material-toggle-track"></span>
+            <span className="material-toggle-thumb"></span>
           </button>
         </div>
 
+        {/* Topic Chips System */}
         <div className="setting-row vertical">
-          <label className="setting-label" htmlFor="focus-topic">
-            Focus Topic
+          <label className="setting-label">
+            Focus Topics
           </label>
-          <input
-            id="focus-topic"
-            type="text"
-            className="topic-input"
-            placeholder="e.g., Chess, Coding, Learning..."
-            value={topic}
-            onChange={handleTopicChange}
-            onBlur={handleTopicBlur}
-            onKeyDown={handleKeyDown}
-          />
+          <div className="chips-container">
+            {topics.map((t, index) => (
+              <span key={index} className="topic-chip">
+                {t}
+                <button 
+                  className="chip-remove" 
+                  onClick={() => removeChip(t)}
+                  aria-label={`Remove ${t}`}
+                >
+                  x
+                </button>
+              </span>
+            ))}
+            <input
+              type="text"
+              className="chip-input"
+              placeholder={topics.length === 0 ? "Type a topic and press Enter..." : "Add more..."}
+              value={inputValue}
+              onChange={handleInputChange}
+              onKeyDown={handleInputKeyDown}
+            />
+          </div>
           <p className="input-hint">
-            Press Enter or click outside to save
+            Press Enter to add a topic chip
           </p>
         </div>
 
@@ -255,13 +307,19 @@ function IndexPopup() {
       </main>
 
       <footer className="popup-footer">
+        {/* Stats Section */}
+        <div className="stats-section">
+          <span className="stats-label">Videos Filtered Today</span>
+          <span className="stats-value">{videosFiltered}</span>
+        </div>
+        
         <p className="status">
           Status:{" "}
           <span className={isEnabled ? "status-active" : "status-inactive"}>
             {isEnabled ? "Focusing" : "Idle"}
           </span>
-          {isEnabled && topic && (
-            <span className="current-topic"> on {topic}</span>
+          {isEnabled && topics.length > 0 && (
+            <span className="current-topic"> on {topics.join(", ")}</span>
           )}
         </p>
       </footer>

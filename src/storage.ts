@@ -14,7 +14,10 @@ export const STORAGE_KEYS = {
   CACHED_VIDEOS_TIME: "cachedVideosTime",
   // Break timer keys
   BREAK_MODE: "breakMode",
-  BREAK_END_TIME: "breakEndTime"
+  BREAK_END_TIME: "breakEndTime",
+  // Stats
+  VIDEOS_FILTERED_TODAY: "videosFilteredToday",
+  LAST_STATS_RESET: "lastStatsReset"
 } as const
 
 const storage = new Storage({ area: "local" })

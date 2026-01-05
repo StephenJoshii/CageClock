@@ -48,17 +48,56 @@
 body {
   font-family: "Roboto", Arial, sans-serif;
   background: var(--yt-bg-primary);
-  min-width: 340px;
+  min-width: 360px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 /* ===== MAIN CONTAINER ===== */
 .popup-container {
-  width: 340px;
+  width: 360px;
   padding: 16px;
   background: var(--yt-bg-primary);
   color: var(--yt-text-primary);
+}
+
+/* ===== STATUS INDICATOR ===== */
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  background: rgba(62, 166, 255, 0.1);
+  border-radius: 12px;
+  border: 1px solid rgba(62, 166, 255, 0.2);
+}
+
+.status-pulse {
+  width: 10px;
+  height: 10px;
+  background: var(--yt-accent);
+  border-radius: 50%;
+  animation: pulse-glow 2s ease-in-out infinite;
+  box-shadow: 0 0 8px var(--yt-accent);
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 8px var(--yt-accent);
+  }
+  50% {
+    opacity: 0.6;
+    box-shadow: 0 0 16px var(--yt-accent), 0 0 24px var(--yt-accent);
+  }
+}
+
+.status-text {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--yt-accent);
+  letter-spacing: 0.3px;
 }
 
 /* ===== HEADER ===== */
@@ -111,66 +150,139 @@ body {
   gap: 8px;
 }
 
-/* ===== TOGGLE SWITCH ===== */
-.toggle-switch {
+/* ===== MATERIAL TOGGLE (iOS/Android Style) ===== */
+.material-toggle {
   position: relative;
-  width: 72px;
+  width: 52px;
   height: 32px;
-  background: var(--yt-bg-hover);
+  background: transparent;
   border: none;
-  border-radius: 16px;
   cursor: pointer;
-  transition: background 0.2s ease;
-  overflow: hidden;
+  padding: 0;
 }
 
-.toggle-switch:hover {
-  background: #4f4f4f;
-}
-
-.toggle-switch.active {
-  background: var(--yt-accent);
-}
-
-.toggle-switch.active:hover {
-  background: var(--yt-accent-hover);
-}
-
-.toggle-slider {
+.material-toggle-track {
   position: absolute;
-  left: 3px;
-  top: 3px;
-  width: 26px;
-  height: 26px;
-  background: var(--yt-text-primary);
-  border-radius: 50%;
-  transition: transform 0.2s ease;
-  box-shadow: 0 1px 3px var(--yt-shadow);
-}
-
-.toggle-switch.active .toggle-slider {
-  transform: translateX(40px);
-}
-
-.toggle-text {
-  position: absolute;
-  font-size: 10px;
-  font-weight: 500;
   top: 50%;
+  left: 0;
+  right: 0;
+  height: 14px;
   transform: translateY(-50%);
-  transition: all 0.2s ease;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  background: var(--yt-bg-hover);
+  border-radius: 7px;
+  transition: background 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.toggle-switch:not(.active) .toggle-text {
-  right: 10px;
+.material-toggle.active .material-toggle-track {
+  background: rgba(62, 166, 255, 0.5);
+}
+
+.material-toggle-thumb {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 20px;
+  height: 20px;
+  transform: translateY(-50%);
+  background: #aaaaaa;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.material-toggle.active .material-toggle-thumb {
+  transform: translateY(-50%) translateX(32px);
+  background: var(--yt-accent);
+  box-shadow: 0 2px 8px rgba(62, 166, 255, 0.4), 0 0 0 1px rgba(62, 166, 255, 0.2);
+}
+
+.material-toggle:hover .material-toggle-thumb {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 0 8px rgba(255, 255, 255, 0.05);
+}
+
+.material-toggle.active:hover .material-toggle-thumb {
+  box-shadow: 0 2px 8px rgba(62, 166, 255, 0.5), 0 0 0 8px rgba(62, 166, 255, 0.1);
+}
+
+/* ===== TOPIC CHIPS SYSTEM ===== */
+.chips-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  min-height: 44px;
+  background: var(--yt-bg-secondary);
+  border: 1px solid var(--yt-border);
+  border-radius: 12px;
+  transition: border-color 0.2s ease;
+  align-items: center;
+}
+
+.chips-container:focus-within {
+  border-color: var(--yt-accent);
+}
+
+.topic-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: var(--yt-bg-hover);
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--yt-text-primary);
+  animation: chip-enter 0.2s ease;
+}
+
+@keyframes chip-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.chip-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
   color: var(--yt-text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1;
 }
 
-.toggle-switch.active .toggle-text {
-  left: 10px;
-  color: var(--yt-bg-primary);
+.chip-remove:hover {
+  background: var(--yt-error);
+  color: var(--yt-text-primary);
+}
+
+.chip-input {
+  flex: 1;
+  min-width: 100px;
+  padding: 4px 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  font-family: "Roboto", Arial, sans-serif;
+  color: var(--yt-text-primary);
+}
+
+.chip-input::placeholder {
+  color: var(--yt-text-secondary);
 }
 
 /* ===== INPUT STYLES ===== */
@@ -181,7 +293,7 @@ body {
   font-family: "Roboto", Arial, sans-serif;
   background: var(--yt-bg-secondary);
   border: 1px solid var(--yt-border);
-  border-radius: 8px;
+  border-radius: 12px;
   color: var(--yt-text-primary);
   transition: all 0.2s ease;
   outline: none;
@@ -306,6 +418,31 @@ body {
   margin-top: 16px;
   padding-top: 12px;
   border-top: 1px solid var(--yt-border);
+}
+
+/* ===== STATS SECTION ===== */
+.stats-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  background: var(--yt-bg-secondary);
+  border-radius: 8px;
+}
+
+.stats-label {
+  font-size: 11px;
+  color: var(--yt-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stats-value {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--yt-text-secondary);
+  font-family: "Roboto Mono", monospace;
 }
 
 .status {
