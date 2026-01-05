@@ -56,17 +56,21 @@ function formatDate(dateString: string): string {
 
 interface VideoCardProps {
   video: YouTubeVideo
+  index?: number
 }
 
 /**
  * Individual Video Card - Exact clone of YouTube's native video card design
  */
-export function VideoCard({ video }: VideoCardProps) {
+export function VideoCard({ video, index = 0 }: VideoCardProps) {
   const videoUrl = `https://www.youtube.com/watch?v=${video.videoId}`
   const channelUrl = `https://www.youtube.com/channel/${video.channelId}`
 
   return (
-    <div className="cageclock-video-card">
+    <div 
+      className="cageclock-video-card"
+      style={{ '--card-index': index } as React.CSSProperties}
+    >
       {/* Thumbnail with duration overlay */}
       <a href={videoUrl} className="cageclock-thumbnail-link">
         <div className="cageclock-thumbnail-container">
@@ -247,8 +251,8 @@ export function FocusFeed({
       {/* Video Grid */}
       {!isLoading && !error && videos.length > 0 && (
         <div className="cageclock-video-grid">
-          {videos.map((video) => (
-            <VideoCard key={video.videoId} video={video} />
+          {videos.map((video, index) => (
+            <VideoCard key={video.videoId} video={video} index={index} />
           ))}
         </div>
       )}

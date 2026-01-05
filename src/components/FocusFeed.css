@@ -188,6 +188,37 @@ html:not([dark]) :host,
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
   gap: 40px 16px;
+  animation: feedFadeSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Feed entrance animation - Fade and Slide */
+@keyframes feedFadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Stagger animation for video cards */
+.cageclock-video-card {
+  animation: cardFadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation-delay: calc(var(--card-index, 0) * 0.05s);
+  opacity: 0;
+}
+
+@keyframes cardFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Larger screens - fixed columns */
@@ -216,6 +247,11 @@ html:not([dark]) :host,
   background: transparent;
   border-radius: 12px;
   overflow: visible;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cageclock-video-card:hover {
+  transform: scale(1.02);
 }
 
 /* Thumbnail Link */
@@ -232,17 +268,22 @@ html:not([dark]) :host,
   overflow: hidden;
   border-radius: 12px;
   background: var(--yt-thumbnail-bg);
+  transition: box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cageclock-video-card:hover .cageclock-thumbnail-container {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
 .cageclock-thumbnail {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.2s ease;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.cageclock-thumbnail-link:hover .cageclock-thumbnail {
-  transform: scale(1.02);
+.cageclock-video-card:hover .cageclock-thumbnail {
+  transform: scale(1.05);
 }
 
 /* Duration Overlay */
