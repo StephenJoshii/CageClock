@@ -1,14 +1,57 @@
 /*
  * CageClock Focus Feed Styles
- * Mimics YouTube's native video card design
+ * YouTube Ambient Design System
  */
+
+/* ===== CSS VARIABLES - THEME SYSTEM ===== */
+:host {
+  /* Dark Mode (Default - YouTube Dark) */
+  --yt-bg-primary: #0f0f0f;
+  --yt-bg-secondary: #272727;
+  --yt-bg-elevated: #1a1a1a;
+  --yt-bg-hover: #3f3f3f;
+  --yt-text-primary: #f1f1f1;
+  --yt-text-secondary: #aaaaaa;
+  --yt-accent: #3ea6ff;
+  --yt-accent-hover: #65b8ff;
+  --yt-border: #3f3f3f;
+  --yt-success: #2ba640;
+  --yt-warning: #ff8c00;
+  --yt-error: #ff4e45;
+  --yt-shadow: rgba(0, 0, 0, 0.4);
+  --yt-card-bg: #272727;
+  --yt-thumbnail-bg: #1a1a1a;
+}
+
+/* Light Mode Detection */
+html:not([dark]) :host,
+[light] :host {
+  --yt-bg-primary: #ffffff;
+  --yt-bg-secondary: #f2f2f2;
+  --yt-bg-elevated: #ffffff;
+  --yt-bg-hover: #e5e5e5;
+  --yt-text-primary: #0f0f0f;
+  --yt-text-secondary: #606060;
+  --yt-accent: #065fd4;
+  --yt-accent-hover: #0056b8;
+  --yt-border: #e5e5e5;
+  --yt-success: #2ba640;
+  --yt-warning: #ff8c00;
+  --yt-error: #cc0000;
+  --yt-shadow: rgba(0, 0, 0, 0.1);
+  --yt-card-bg: #ffffff;
+  --yt-thumbnail-bg: #f2f2f2;
+}
 
 /* ===== FEED CONTAINER ===== */
 .cageclock-focus-feed {
   max-width: 1400px;
   margin: 0 auto;
   padding: 24px;
-  font-family: "Roboto", "Arial", sans-serif;
+  font-family: "Roboto", Arial, sans-serif;
+  color: var(--yt-text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* ===== REDIRECT BANNER ===== */
@@ -18,27 +61,28 @@
   justify-content: space-between;
   padding: 12px 16px;
   margin-bottom: 16px;
-  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
-  border-radius: 8px;
-  color: white;
+  background: var(--yt-warning);
+  border-radius: 12px;
+  color: #0f0f0f;
   font-size: 14px;
   font-weight: 500;
   animation: slideDown 0.3s ease;
 }
 
 .cageclock-redirect-banner button {
-  background: none;
+  background: rgba(0, 0, 0, 0.1);
   border: none;
-  color: white;
-  font-size: 16px;
+  color: #0f0f0f;
+  font-size: 14px;
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: background 0.2s;
+  padding: 6px 10px;
+  border-radius: 18px;
+  transition: background 0.2s ease;
+  font-family: "Roboto", Arial, sans-serif;
 }
 
 .cageclock-redirect-banner button:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.2);
 }
 
 @keyframes slideDown {
@@ -57,9 +101,9 @@
   text-align: center;
   margin-bottom: 32px;
   padding: 24px;
-  background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
-  border-radius: 16px;
-  border: 1px solid rgba(102, 126, 234, 0.2);
+  background: var(--yt-bg-secondary);
+  border-radius: 12px;
+  border: 1px solid var(--yt-border);
 }
 
 .cageclock-feed-title {
@@ -71,45 +115,50 @@
 }
 
 .cageclock-feed-icon {
-  font-size: 32px;
+  font-size: 28px;
 }
 
 .cageclock-feed-title h2 {
-  font-size: 24px;
-  font-weight: 600;
-  color: #0f0f0f;
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--yt-text-primary);
   margin: 0;
+  letter-spacing: -0.3px;
 }
 
 .cageclock-topic-highlight {
-  color: #667eea;
+  color: var(--yt-accent);
 }
 
 .cageclock-feed-subtitle {
   font-size: 14px;
-  color: #606060;
+  color: var(--yt-text-secondary);
   margin: 0 0 16px 0;
 }
 
 .cageclock-refresh-btn {
   padding: 10px 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--yt-accent);
   border: none;
-  border-radius: 20px;
-  color: white;
+  border-radius: 18px;
+  color: #0f0f0f;
   font-size: 14px;
   font-weight: 500;
+  font-family: "Roboto", Arial, sans-serif;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, transform 0.1s ease;
 }
 
 .cageclock-refresh-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  background: var(--yt-accent-hover);
+}
+
+.cageclock-refresh-btn:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 .cageclock-refresh-btn:disabled {
-  opacity: 0.7;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
@@ -140,13 +189,12 @@
   color: inherit;
   border-radius: 12px;
   overflow: hidden;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  background: #fff;
+  transition: transform 0.2s ease;
+  background: transparent;
 }
 
 .cageclock-video-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
 }
 
 /* Thumbnail Container */
@@ -156,18 +204,18 @@
   aspect-ratio: 16 / 9;
   overflow: hidden;
   border-radius: 12px;
-  background: #f0f0f0;
+  background: var(--yt-thumbnail-bg);
 }
 
 .cageclock-thumbnail {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s ease;
+  transition: transform 0.2s ease;
 }
 
 .cageclock-video-card:hover .cageclock-thumbnail {
-  transform: scale(1.05);
+  transform: scale(1.02);
 }
 
 /* Focus Badge */
@@ -176,19 +224,20 @@
   top: 8px;
   right: 8px;
   padding: 4px 8px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  font-size: 11px;
-  font-weight: 600;
+  background: var(--yt-accent);
+  color: #0f0f0f;
+  font-size: 10px;
+  font-weight: 500;
   border-radius: 4px;
-  opacity: 0.9;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
 }
 
 /* Video Info */
 .cageclock-video-info {
   display: flex;
   gap: 12px;
-  padding: 12px 4px;
+  padding: 12px 0;
 }
 
 /* Channel Avatar */
@@ -197,13 +246,13 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: var(--yt-bg-secondary);
+  color: var(--yt-text-primary);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 /* Video Details */
@@ -216,7 +265,7 @@
   font-size: 14px;
   font-weight: 500;
   line-height: 1.4;
-  color: #0f0f0f;
+  color: var(--yt-text-primary);
   margin: 0 0 4px 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -226,20 +275,21 @@
 
 .cageclock-channel-name {
   font-size: 12px;
-  color: #606060;
+  color: var(--yt-text-secondary);
   margin: 0 0 2px 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  transition: color 0.2s ease;
 }
 
 .cageclock-channel-name:hover {
-  color: #0f0f0f;
+  color: var(--yt-text-primary);
 }
 
 .cageclock-video-meta {
   font-size: 12px;
-  color: #606060;
+  color: var(--yt-text-secondary);
   margin: 0;
 }
 
@@ -250,14 +300,14 @@
   align-items: center;
   justify-content: center;
   padding: 60px 20px;
-  color: #606060;
+  color: var(--yt-text-secondary);
 }
 
 .cageclock-spinner {
   width: 40px;
   height: 40px;
-  border: 3px solid #f0f0f0;
-  border-top-color: #667eea;
+  border: 3px solid var(--yt-border);
+  border-top-color: var(--yt-accent);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 16px;
@@ -267,13 +317,17 @@
   to { transform: rotate(360deg); }
 }
 
+.cageclock-loading p {
+  font-size: 14px;
+}
+
 /* ===== ERROR STATE ===== */
 .cageclock-error {
   text-align: center;
   padding: 40px 20px;
-  background: #fff3e0;
+  background: var(--yt-bg-secondary);
   border-radius: 12px;
-  border: 1px solid #ffcc80;
+  border: 1px solid var(--yt-error);
 }
 
 .cageclock-error-icon {
@@ -283,12 +337,13 @@
 }
 
 .cageclock-error p {
-  color: #e65100;
+  color: var(--yt-error);
   margin: 0 0 8px 0;
+  font-size: 14px;
 }
 
 .cageclock-error-hint {
-  color: #bf360c !important;
+  color: var(--yt-text-secondary) !important;
   font-size: 13px;
 }
 
@@ -296,7 +351,7 @@
 .cageclock-empty {
   text-align: center;
   padding: 60px 20px;
-  color: #606060;
+  color: var(--yt-text-secondary);
 }
 
 .cageclock-empty-icon {
@@ -307,11 +362,12 @@
 
 .cageclock-empty p {
   margin: 0 0 8px 0;
+  font-size: 14px;
 }
 
 .cageclock-empty-hint {
   font-size: 13px;
-  color: #999;
+  color: var(--yt-text-secondary);
 }
 
 /* ===== FEED FOOTER ===== */
@@ -319,60 +375,43 @@
   text-align: center;
   margin-top: 40px;
   padding-top: 24px;
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid var(--yt-border);
 }
 
 .cageclock-feed-footer p {
-  font-size: 13px;
-  color: #999;
+  font-size: 12px;
+  color: var(--yt-text-secondary);
   margin: 0;
 }
 
-/* ===== DARK MODE SUPPORT ===== */
+/* ===== DARK MODE DETECTION (YouTube's dark attribute) ===== */
 html[dark] .cageclock-focus-feed,
-[dark] .cageclock-focus-feed {
-  color: #f1f1f1;
+[dark] .cageclock-focus-feed,
+ytd-app[darker-dark-theme] .cageclock-focus-feed {
+  --yt-bg-primary: #0f0f0f;
+  --yt-bg-secondary: #272727;
+  --yt-bg-elevated: #1a1a1a;
+  --yt-bg-hover: #3f3f3f;
+  --yt-text-primary: #f1f1f1;
+  --yt-text-secondary: #aaaaaa;
+  --yt-accent: #3ea6ff;
+  --yt-accent-hover: #65b8ff;
+  --yt-border: #3f3f3f;
+  --yt-card-bg: #272727;
+  --yt-thumbnail-bg: #1a1a1a;
 }
 
-html[dark] .cageclock-feed-header,
-[dark] .cageclock-feed-header {
-  background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%);
-  border-color: rgba(102, 126, 234, 0.3);
-}
-
-html[dark] .cageclock-feed-title h2,
-[dark] .cageclock-feed-title h2 {
-  color: #f1f1f1;
-}
-
-html[dark] .cageclock-feed-subtitle,
-[dark] .cageclock-feed-subtitle {
-  color: #aaa;
-}
-
-html[dark] .cageclock-video-card,
-[dark] .cageclock-video-card {
-  background: #212121;
-}
-
-html[dark] .cageclock-video-title,
-[dark] .cageclock-video-title {
-  color: #f1f1f1;
-}
-
-html[dark] .cageclock-channel-name,
-html[dark] .cageclock-video-meta,
-[dark] .cageclock-channel-name,
-[dark] .cageclock-video-meta {
-  color: #aaa;
-}
-
-html[dark] .cageclock-thumbnail-container,
-[dark] .cageclock-thumbnail-container {
-  background: #333;
-}
-
-html[dark] .cageclock-feed-footer,
-[dark] .cageclock-feed-footer {
-  border-color: #333;
+/* Light Mode */
+html:not([dark]) .cageclock-focus-feed {
+  --yt-bg-primary: #ffffff;
+  --yt-bg-secondary: #f2f2f2;
+  --yt-bg-elevated: #ffffff;
+  --yt-bg-hover: #e5e5e5;
+  --yt-text-primary: #0f0f0f;
+  --yt-text-secondary: #606060;
+  --yt-accent: #065fd4;
+  --yt-accent-hover: #0056b8;
+  --yt-border: #e5e5e5;
+  --yt-card-bg: #ffffff;
+  --yt-thumbnail-bg: #f2f2f2;
 }

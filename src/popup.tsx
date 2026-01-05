@@ -146,7 +146,7 @@ function IndexPopup() {
   return (
     <div className="popup-container">
       <header className="popup-header">
-        <h1>🎯 CageClock</h1>
+        <h1>CageClock</h1>
         <p className="subtitle">Stay focused on what matters</p>
       </header>
 
@@ -208,7 +208,7 @@ function IndexPopup() {
             className="emergency-exit-btn"
             onClick={handleStartBreak}
           >
-            🚪 Emergency Exit (10 min break)
+            Emergency Exit (10 min break)
           </button>
         )}
         
@@ -217,7 +217,7 @@ function IndexPopup() {
           className="settings-toggle"
           onClick={() => setShowSettings(!showSettings)}
         >
-          ⚙️ {showSettings ? "Hide Settings" : "API Settings"}
+           {showSettings ? "Hide Settings" : "API Settings"}
         </button>
         
         {/* API Key Settings Panel */}
