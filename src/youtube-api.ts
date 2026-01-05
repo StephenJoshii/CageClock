@@ -10,8 +10,11 @@ export interface YouTubeVideo {
   thumbnailUrl: string
   channelName: string
   channelId: string
+  channelAvatarUrl: string
   publishedAt: string
   description: string
+  duration: string // ISO 8601 duration (e.g., "PT4M13S")
+  viewCount: string
 }
 
 // YouTube API response types
@@ -48,6 +51,38 @@ interface YouTubeSearchResponse {
     resultsPerPage: number
   }
   items: YouTubeSearchItem[]
+}
+
+// Video details response types
+interface YouTubeVideoDetailsItem {
+  id: string
+  contentDetails: {
+    duration: string
+  }
+  statistics: {
+    viewCount: string
+    likeCount?: string
+    commentCount?: string
+  }
+}
+
+interface YouTubeVideoDetailsResponse {
+  items: YouTubeVideoDetailsItem[]
+}
+
+// Channel details response types
+interface YouTubeChannelItem {
+  id: string
+  snippet: {
+    thumbnails: {
+      default: { url: string }
+      medium?: { url: string }
+    }
+  }
+}
+
+interface YouTubeChannelResponse {
+  items: YouTubeChannelItem[]
 }
 
 // API Error types
@@ -179,21 +214,55 @@ export async function fetchVideosForTopic(
 
     const searchResponse = data as YouTubeSearchResponse
     
-    // Filter and map the results
-    const videos: YouTubeVideo[] = searchResponse.items
-      .filter((item) => {
-        // Ensure it's a video (double-check the type filter)
-        return item.id.kind === "youtube#video" && item.id.videoId
+    // Filter valid videos
+    const validItems = searchResponse.items.filter((item) => {
+      return item.id.kind === "youtube#video" && item.id.videoId
+    })
+
+    if (validItems.length === 0) {
+      return []
+    }
+
+    // Get video IDs and channel IDs for additional details
+    const videoIds = validItems.map((item) => item.id.videoId!).join(",")
+    const channelIds = [...new Set(validItems.map((item) => item.snippet.channelId))].join(",")
+
+    // Fetch video details (duration, view count) in parallel with channel details
+    const [videoDetailsResponse, channelResponse] = await Promise.all([
+      fetchVideoDetails(videoIds, apiKey),
+      fetchChannelAvatars(channelIds, apiKey)
+    ])
+
+    // Create maps for quick lookup
+    const videoDetailsMap = new Map<string, { duration: string; viewCount: string }>()
+    videoDetailsResponse.items.forEach((item) => {
+      videoDetailsMap.set(item.id, {
+        duration: item.contentDetails.duration,
+        viewCount: item.statistics.viewCount
       })
-      .map((item) => ({
+    })
+
+    const channelAvatarMap = new Map<string, string>()
+    channelResponse.items.forEach((item) => {
+      channelAvatarMap.set(item.id, item.snippet.thumbnails.medium?.url || item.snippet.thumbnails.default.url)
+    })
+
+    // Map the results with all details
+    const videos: YouTubeVideo[] = validItems.map((item) => {
+      const details = videoDetailsMap.get(item.id.videoId!) || { duration: "PT0S", viewCount: "0" }
+      return {
         videoId: item.id.videoId!,
         title: decodeHTMLEntities(item.snippet.title),
         thumbnailUrl: getBestThumbnail(item.snippet.thumbnails),
         channelName: item.snippet.channelTitle,
         channelId: item.snippet.channelId,
+        channelAvatarUrl: channelAvatarMap.get(item.snippet.channelId) || "",
         publishedAt: item.snippet.publishedAt,
-        description: decodeHTMLEntities(item.snippet.description)
-      }))
+        description: decodeHTMLEntities(item.snippet.description),
+        duration: details.duration,
+        viewCount: details.viewCount
+      }
+    })
 
     console.log(`[YouTube API] Found ${videos.length} videos for topic: "${topic}"`)
     return videos
@@ -223,6 +292,50 @@ export async function fetchVideosForTopic(
       isAuthError: false,
       isNetworkError: false
     } as YouTubeAPIError
+  }
+}
+
+/**
+ * Fetch video details (duration, view count) for multiple videos
+ */
+async function fetchVideoDetails(videoIds: string, apiKey: string): Promise<YouTubeVideoDetailsResponse> {
+  const url = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails,statistics&id=${videoIds}&key=${apiKey}`
+  
+  try {
+    const response = await fetch(url)
+    const data = await response.json()
+    
+    if (!response.ok || data.error) {
+      console.error("[YouTube API] Error fetching video details:", data.error)
+      return { items: [] }
+    }
+    
+    return data as YouTubeVideoDetailsResponse
+  } catch (error) {
+    console.error("[YouTube API] Failed to fetch video details:", error)
+    return { items: [] }
+  }
+}
+
+/**
+ * Fetch channel avatars for multiple channels
+ */
+async function fetchChannelAvatars(channelIds: string, apiKey: string): Promise<YouTubeChannelResponse> {
+  const url = `https://www.googleapis.com/youtube/v3/channels?part=snippet&id=${channelIds}&key=${apiKey}`
+  
+  try {
+    const response = await fetch(url)
+    const data = await response.json()
+    
+    if (!response.ok || data.error) {
+      console.error("[YouTube API] Error fetching channel avatars:", data.error)
+      return { items: [] }
+    }
+    
+    return data as YouTubeChannelResponse
+  } catch (error) {
+    console.error("[YouTube API] Failed to fetch channel avatars:", error)
+    return { items: [] }
   }
 }
 

@@ -1,6 +1,6 @@
 /*
  * CageClock Focus Feed Styles
- * YouTube Ambient Design System
+ * YouTube Home Page Grid Clone
  */
 
 /* ===== CSS VARIABLES - THEME SYSTEM ===== */
@@ -21,6 +21,8 @@
   --yt-shadow: rgba(0, 0, 0, 0.4);
   --yt-card-bg: #272727;
   --yt-thumbnail-bg: #1a1a1a;
+  --yt-skeleton-bg: #272727;
+  --yt-skeleton-shimmer: linear-gradient(90deg, #272727 0%, #3f3f3f 50%, #272727 100%);
 }
 
 /* Light Mode Detection */
@@ -41,15 +43,34 @@ html:not([dark]) :host,
   --yt-shadow: rgba(0, 0, 0, 0.1);
   --yt-card-bg: #ffffff;
   --yt-thumbnail-bg: #f2f2f2;
+  --yt-skeleton-bg: #e5e5e5;
+  --yt-skeleton-shimmer: linear-gradient(90deg, #e5e5e5 0%, #f5f5f5 50%, #e5e5e5 100%);
 }
 
 /* ===== FEED CONTAINER ===== */
+/*
+ * Plasmo overlay approach: The shadow host is positioned absolutely
+ * over the anchor element (#primary on YouTube home page).
+ * We use position: relative and let Plasmo handle the overlay positioning.
+ */
+
+/* Plasmo's overlay container - position and sizing */
+:host {
+  display: block !important;
+  position: relative !important;
+  width: 100% !important;
+  background: var(--yt-bg-primary, #0f0f0f) !important;
+}
+
 .cageclock-focus-feed {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 24px;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 24px 24px 24px 16px;
+  box-sizing: border-box;
   font-family: "Roboto", Arial, sans-serif;
   color: var(--yt-text-primary);
+  background: var(--yt-bg-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -98,63 +119,63 @@ html:not([dark]) :host,
 
 /* ===== FEED HEADER ===== */
 .cageclock-feed-header {
-  text-align: center;
-  margin-bottom: 32px;
-  padding: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 12px 16px;
   background: var(--yt-bg-secondary);
-  border-radius: 12px;
-  border: 1px solid var(--yt-border);
+  border-radius: 10px;
+  border: none;
 }
 
 .cageclock-feed-title {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 12px;
-  margin-bottom: 8px;
+  gap: 8px;
+  margin: 0;
 }
 
 .cageclock-feed-icon {
-  font-size: 28px;
+  font-size: 18px;
 }
 
 .cageclock-feed-title h2 {
-  font-size: 20px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 400;
   color: var(--yt-text-primary);
   margin: 0;
-  letter-spacing: -0.3px;
 }
 
 .cageclock-topic-highlight {
   color: var(--yt-accent);
+  font-weight: 500;
 }
 
 .cageclock-feed-subtitle {
-  font-size: 14px;
-  color: var(--yt-text-secondary);
-  margin: 0 0 16px 0;
+  display: none;
 }
 
 .cageclock-refresh-btn {
-  padding: 10px 24px;
-  background: var(--yt-accent);
+  padding: 8px 16px;
+  background: var(--yt-bg-hover);
   border: none;
-  border-radius: 18px;
-  color: #0f0f0f;
+  border-radius: 8px;
+  color: var(--yt-text-primary);
   font-size: 14px;
   font-weight: 500;
   font-family: "Roboto", Arial, sans-serif;
   cursor: pointer;
-  transition: background 0.2s ease, transform 0.1s ease;
+  transition: background 0.2s ease;
 }
 
 .cageclock-refresh-btn:hover:not(:disabled) {
-  background: var(--yt-accent-hover);
+  background: var(--yt-border);
 }
 
 .cageclock-refresh-btn:active:not(:disabled) {
-  transform: scale(0.98);
+  opacity: 0.8;
 }
 
 .cageclock-refresh-btn:disabled {
@@ -162,21 +183,27 @@ html:not([dark]) :host,
   cursor: not-allowed;
 }
 
-/* ===== VIDEO GRID ===== */
+/* ===== VIDEO GRID - YouTube Home Page Clone ===== */
 .cageclock-video-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  gap: 40px 16px;
 }
 
-/* Responsive grid */
-@media (max-width: 1200px) {
+/* Larger screens - fixed columns */
+@media (min-width: 1200px) {
   .cageclock-video-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(4, 1fr);
   }
 }
 
-@media (max-width: 800px) {
+@media (min-width: 1600px) {
+  .cageclock-video-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+@media (max-width: 700px) {
   .cageclock-video-grid {
     grid-template-columns: 1fr;
   }
@@ -184,17 +211,17 @@ html:not([dark]) :host,
 
 /* ===== VIDEO CARD ===== */
 .cageclock-video-card {
-  display: block;
-  text-decoration: none;
-  color: inherit;
-  border-radius: 12px;
-  overflow: hidden;
-  transition: transform 0.2s ease;
+  display: flex;
+  flex-direction: column;
   background: transparent;
+  border-radius: 12px;
+  overflow: visible;
 }
 
-.cageclock-video-card:hover {
-  transform: translateY(-2px);
+/* Thumbnail Link */
+.cageclock-thumbnail-link {
+  display: block;
+  text-decoration: none;
 }
 
 /* Thumbnail Container */
@@ -214,43 +241,52 @@ html:not([dark]) :host,
   transition: transform 0.2s ease;
 }
 
-.cageclock-video-card:hover .cageclock-thumbnail {
+.cageclock-thumbnail-link:hover .cageclock-thumbnail {
   transform: scale(1.02);
 }
 
-/* Focus Badge */
-.cageclock-focus-badge {
+/* Duration Overlay */
+.cageclock-duration-overlay {
   position: absolute;
-  top: 8px;
+  bottom: 8px;
   right: 8px;
-  padding: 4px 8px;
-  background: var(--yt-accent);
-  color: #0f0f0f;
-  font-size: 10px;
+  padding: 3px 6px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #ffffff;
+  font-size: 12px;
   font-weight: 500;
   border-radius: 4px;
-  text-transform: uppercase;
   letter-spacing: 0.3px;
+  font-family: "Roboto", Arial, sans-serif;
 }
 
-/* Video Info */
+/* Video Info Row */
 .cageclock-video-info {
   display: flex;
   gap: 12px;
-  padding: 12px 0;
+  padding: 12px 0 0 0;
+}
+
+/* Channel Avatar Link */
+.cageclock-channel-avatar-link {
+  flex-shrink: 0;
+  text-decoration: none;
 }
 
 /* Channel Avatar */
 .cageclock-channel-avatar {
-  flex-shrink: 0;
   width: 36px;
   height: 36px;
   border-radius: 50%;
   background: var(--yt-bg-secondary);
-  color: var(--yt-text-primary);
+  object-fit: cover;
+}
+
+.cageclock-avatar-placeholder {
   display: flex;
   align-items: center;
   justify-content: center;
+  color: var(--yt-text-primary);
   font-size: 14px;
   font-weight: 500;
 }
@@ -261,6 +297,13 @@ html:not([dark]) :host,
   min-width: 0;
 }
 
+/* Video Title Link */
+.cageclock-video-title-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Video Title */
 .cageclock-video-title {
   font-size: 14px;
   font-weight: 500;
@@ -273,9 +316,16 @@ html:not([dark]) :host,
   overflow: hidden;
 }
 
+.cageclock-video-title-link:hover .cageclock-video-title {
+  color: var(--yt-text-primary);
+}
+
+/* Channel Name */
 .cageclock-channel-name {
+  display: block;
   font-size: 12px;
   color: var(--yt-text-secondary);
+  text-decoration: none;
   margin: 0 0 2px 0;
   white-space: nowrap;
   overflow: hidden;
@@ -287,38 +337,71 @@ html:not([dark]) :host,
   color: var(--yt-text-primary);
 }
 
+/* Video Meta (Views • Date) */
 .cageclock-video-meta {
   font-size: 12px;
   color: var(--yt-text-secondary);
   margin: 0;
-}
-
-/* ===== LOADING STATE ===== */
-.cageclock-loading {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 60px 20px;
-  color: var(--yt-text-secondary);
+  gap: 4px;
 }
 
-.cageclock-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid var(--yt-border);
-  border-top-color: var(--yt-accent);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 16px;
+.cageclock-meta-separator {
+  font-size: 8px;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+/* ===== SKELETON LOADING STATE ===== */
+.cageclock-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--yt-skeleton-bg);
 }
 
-.cageclock-loading p {
-  font-size: 14px;
+.cageclock-skeleton-shimmer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--yt-skeleton-shimmer);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.cageclock-skeleton-card .cageclock-thumbnail-container {
+  border-radius: 12px;
+}
+
+.cageclock-skeleton-card .cageclock-channel-avatar {
+  background: var(--yt-skeleton-bg);
+}
+
+.cageclock-skeleton-title {
+  height: 14px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  width: 100%;
+}
+
+.cageclock-skeleton-title-short {
+  width: 70%;
+}
+
+.cageclock-skeleton-meta {
+  height: 12px;
+  border-radius: 4px;
+  width: 50%;
+  margin-top: 4px;
 }
 
 /* ===== ERROR STATE ===== */
@@ -399,6 +482,8 @@ ytd-app[darker-dark-theme] .cageclock-focus-feed {
   --yt-border: #3f3f3f;
   --yt-card-bg: #272727;
   --yt-thumbnail-bg: #1a1a1a;
+  --yt-skeleton-bg: #272727;
+  --yt-skeleton-shimmer: linear-gradient(90deg, #272727 0%, #3f3f3f 50%, #272727 100%);
 }
 
 /* Light Mode */
@@ -414,4 +499,6 @@ html:not([dark]) .cageclock-focus-feed {
   --yt-border: #e5e5e5;
   --yt-card-bg: #ffffff;
   --yt-thumbnail-bg: #f2f2f2;
+  --yt-skeleton-bg: #e5e5e5;
+  --yt-skeleton-shimmer: linear-gradient(90deg, #e5e5e5 0%, #f5f5f5 50%, #e5e5e5 100%);
 }

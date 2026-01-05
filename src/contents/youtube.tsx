@@ -1,6 +1,6 @@
 import cssText from "data-text:../components/FocusFeed.css"
-import type { PlasmoCSConfig, PlasmoGetInlineAnchor, PlasmoGetStyle } from "plasmo"
-import { useEffect, useState } from "react"
+import type { PlasmoCSConfig, PlasmoGetOverlayAnchor, PlasmoGetShadowHostId, PlasmoGetStyle } from "plasmo"
+import { useEffect, useRef, useState } from "react"
 
 import { Storage } from "@plasmohq/storage"
 import { useStorage } from "@plasmohq/storage/hook"
@@ -12,7 +12,7 @@ import type { YouTubeVideo } from "../youtube-api"
 // Plasmo content script configuration
 export const config: PlasmoCSConfig = {
   matches: ["https://www.youtube.com/*", "https://youtube.com/*"],
-  run_at: "document_end", // Changed to document_end to ensure DOM is ready
+  run_at: "document_end",
   all_frames: false
 }
 
@@ -24,12 +24,21 @@ const BLOCKED_PATHS = [
   "/shorts"
 ]
 
-// Tell Plasmo where to inject our React component
-export const getInlineAnchor: PlasmoGetInlineAnchor = async () => {
-  // Wait for YouTube's page container to be ready
-  const anchor = document.querySelector("ytd-browse[page-subtype='home'] #contents")
-  return anchor || document.body
+// Use overlay anchor to position over YouTube's content area
+export const getOverlayAnchor: PlasmoGetOverlayAnchor = async () => {
+  // Target YouTube's primary content area on home page
+  const primary = document.querySelector("ytd-browse[page-subtype='home'] #primary")
+  if (primary) return primary
+  
+  // Fallback
+  const pageManager = document.querySelector("ytd-page-manager")
+  if (pageManager) return pageManager
+  
+  return document.body
 }
+
+// Give our shadow host a unique ID
+export const getShadowHostId: PlasmoGetShadowHostId = () => "cageclock-feed-host"
 
 // Inject our CSS styles
 export const getStyle: PlasmoGetStyle = () => {
@@ -41,40 +50,36 @@ export const getStyle: PlasmoGetStyle = () => {
 // CSS selectors for YouTube elements to hide
 export const YOUTUBE_SELECTORS = {
   // ===== HOME PAGE FEED =====
-  homeFeed: "ytd-rich-grid-renderer", // Main home page video grid
-  homeFeedContainer: "ytd-browse[page-subtype='home']", // Home page container
+  homeFeed: "ytd-rich-grid-renderer",
+  homeFeedContainer: "ytd-browse[page-subtype='home']",
   
   // ===== SIDEBAR & RELATED VIDEOS =====
-  sidebar: "ytd-watch-next-secondary-results-renderer", // "Up Next" sidebar on video pages
-  relatedVideos: "#related", // Related videos container
-  secondaryInner: "#secondary-inner", // Secondary column wrapper
-  secondary: "#secondary", // Full secondary column
+  sidebar: "ytd-watch-next-secondary-results-renderer",
+  relatedVideos: "#related",
+  secondaryInner: "#secondary-inner",
+  secondary: "#secondary",
   
   // ===== RECOMMENDATIONS & SUGGESTIONS =====
-  chipsBar: "ytd-feed-filter-chip-bar-renderer", // Category chips at top of home
-  compactVideo: "ytd-compact-video-renderer", // Individual sidebar video items
-  richShelf: "ytd-rich-shelf-renderer", // Shelf sections (Shorts, Breaking News, etc.)
-  reelShelf: "ytd-reel-shelf-renderer", // Shorts shelf
+  chipsBar: "ytd-feed-filter-chip-bar-renderer",
+  compactVideo: "ytd-compact-video-renderer",
+  richShelf: "ytd-rich-shelf-renderer",
+  reelShelf: "ytd-reel-shelf-renderer",
   
   // ===== SHORTS =====
-  shortsContainer: "ytd-shorts", // Shorts player
-  shortsShelf: "ytd-reel-shelf-renderer", // Shorts on home page
+  shortsContainer: "ytd-shorts",
+  shortsShelf: "ytd-reel-shelf-renderer",
   
   // ===== END SCREEN & CARDS =====
-  endScreen: ".ytp-ce-element", // End screen recommendations
+  endScreen: ".ytp-ce-element",
   endScreenContainer: ".ytp-endscreen-content",
-  cards: ".ytp-cards-teaser", // Video cards
-  
-  // ===== COMMENTS (optional) =====
-  comments: "ytd-comments", // Comments section
-  
-  // ===== SEARCH RESULTS (if you want to filter) =====
-  searchResults: "ytd-search", // Search results page
+  cards: ".ytp-cards-teaser",
   
   // ===== MISC =====
-  masthead: "ytd-masthead", // Top navigation bar (usually keep visible)
-  miniGuide: "ytd-mini-guide-renderer", // Collapsed sidebar
-  guide: "ytd-guide-renderer", // Full sidebar navigation
+  comments: "ytd-comments",
+  searchResults: "ytd-search",
+  masthead: "ytd-masthead",
+  miniGuide: "ytd-mini-guide-renderer",
+  guide: "ytd-guide-renderer",
 } as const
 
 // Generate CSS to hide all distracting elements
@@ -84,28 +89,27 @@ function generateHideCSS(isEnabled: boolean): string {
   return `
     /* CageClock Focus Mode - Hide Distractions */
     
-    /* Hide Home Page Feed */
-    ${YOUTUBE_SELECTORS.homeFeed},
-    ytd-browse[page-subtype="home"] #contents.ytd-rich-grid-renderer {
-      display: none !important;
-    }
-    
-    /* Hide Sidebar / Up Next Recommendations */
-    ${YOUTUBE_SELECTORS.sidebar},
-    ${YOUTUBE_SELECTORS.relatedVideos},
-    ${YOUTUBE_SELECTORS.secondary} {
+    /* Hide Home Page Feed on home page only */
+    ytd-browse[page-subtype="home"] ${YOUTUBE_SELECTORS.homeFeed} {
       display: none !important;
     }
     
     /* Hide Category Chips */
-    ${YOUTUBE_SELECTORS.chipsBar} {
+    ytd-browse[page-subtype="home"] ${YOUTUBE_SELECTORS.chipsBar} {
       display: none !important;
     }
     
-    /* Hide Shorts */
+    /* Hide Shorts shelf */
     ${YOUTUBE_SELECTORS.shortsShelf},
     ${YOUTUBE_SELECTORS.reelShelf},
     ytd-rich-section-renderer:has(${YOUTUBE_SELECTORS.reelShelf}) {
+      display: none !important;
+    }
+    
+    /* On video watch pages: hide sidebar recommendations */
+    ${YOUTUBE_SELECTORS.sidebar},
+    ${YOUTUBE_SELECTORS.relatedVideos},
+    ${YOUTUBE_SELECTORS.secondary} {
       display: none !important;
     }
     
@@ -142,7 +146,6 @@ function injectCSS(css: string) {
     styleEl = document.createElement("style")
     styleEl.id = STYLE_ID
     styleEl.setAttribute("type", "text/css")
-    // Insert at the start of head to load as early as possible
     const head = document.head || document.documentElement
     head.insertBefore(styleEl, head.firstChild)
   }
@@ -150,15 +153,12 @@ function injectCSS(css: string) {
   styleEl.textContent = css
 }
 
-// Remove all injected CSS (both early and main)
+// Remove all injected CSS
 function removeCSS() {
-  // Remove main focus style
   const styleEl = document.getElementById(STYLE_ID)
   if (styleEl) {
     styleEl.remove()
   }
-  
-  // Also remove early hide style to ensure complete cleanup
   const earlyStyleEl = document.getElementById("cageclock-early-hide")
   if (earlyStyleEl) {
     earlyStyleEl.remove()
@@ -187,32 +187,47 @@ function YouTubeContentScript() {
   const [error, setError] = useState<string | null>(null)
   const [isHomePage, setIsHomePage] = useState(false)
   const [wasRedirected, setWasRedirected] = useState(false)
+  
+  // Track previous enabled state to detect when user turns off
+  const prevEnabledRef = useRef<boolean | undefined>(undefined)
+
+  // ===== HANDLE TOGGLE OFF: Reload page to restore YouTube =====
+  useEffect(() => {
+    // Skip first render
+    if (prevEnabledRef.current === undefined) {
+      prevEnabledRef.current = isEnabled
+      return
+    }
+    
+    // If user turned OFF focus mode, reload to restore YouTube
+    if (prevEnabledRef.current === true && isEnabled === false) {
+      console.log("[CageClock] Focus mode disabled - reloading to restore YouTube")
+      removeCSS()
+      window.location.reload()
+    }
+    
+    prevEnabledRef.current = isEnabled
+  }, [isEnabled])
 
   // ===== REDIRECTOR: Block Trending, Gaming, etc. =====
   useEffect(() => {
-    // Skip if focus mode is off or on break
     if (!isEnabled || breakMode) return
     
     const checkAndRedirect = () => {
       const currentPath = window.location.pathname
-      
-      // Check if current path is blocked
       const isBlocked = BLOCKED_PATHS.some(blockedPath => 
         currentPath.startsWith(blockedPath)
       )
       
       if (isBlocked) {
-        console.log(`[CageClock] Redirecting from blocked page: ${currentPath}`)
+        console.log("[CageClock] Redirecting from blocked page: ${currentPath}")
         setWasRedirected(true)
-        // Redirect to home page
         window.location.href = "https://www.youtube.com/"
       }
     }
     
-    // Check immediately
     checkAndRedirect()
     
-    // Listen for YouTube's SPA navigation (yt-navigate-finish)
     const handleNavigation = () => {
       checkAndRedirect()
     }
@@ -228,7 +243,6 @@ function YouTubeContentScript() {
   useEffect(() => {
     const checkHomePage = () => {
       const isHome = window.location.pathname === "/" || 
-                     window.location.pathname === "/feed/subscriptions" ||
                      document.querySelector("ytd-browse[page-subtype='home']") !== null
       setIsHomePage(isHome)
     }
@@ -236,42 +250,31 @@ function YouTubeContentScript() {
     checkHomePage()
     
     // Listen for YouTube's SPA navigation
-    const observer = new MutationObserver(() => {
-      checkHomePage()
-    })
-    
-    observer.observe(document.body, { 
-      childList: true, 
-      subtree: true 
-    })
-    
-    // Also listen for popstate (back/forward)
+    document.addEventListener("yt-navigate-finish", checkHomePage)
     window.addEventListener("popstate", checkHomePage)
     
     return () => {
-      observer.disconnect()
+      document.removeEventListener("yt-navigate-finish", checkHomePage)
       window.removeEventListener("popstate", checkHomePage)
     }
   }, [])
 
   // Handle CSS injection for hiding native content
   useEffect(() => {
-    console.log("[CageClock] useEffect triggered, isEnabled:", isEnabled)
+    console.log("[CageClock] isEnabled:", isEnabled, "isHomePage:", isHomePage)
     
-    if (isEnabled) {
+    if (isEnabled && isHomePage) {
       const css = generateHideCSS(true)
       injectCSS(css)
       console.log("[CageClock] Focus mode enabled - hiding distractions")
     } else {
       removeCSS()
-      console.log("[CageClock] Focus mode disabled - showing all content")
     }
 
-    // Cleanup on unmount
     return () => {
       removeCSS()
     }
-  }, [isEnabled])
+  }, [isEnabled, isHomePage])
 
   // Fetch videos when focus mode is enabled and we have a topic
   useEffect(() => {
@@ -312,10 +315,7 @@ function YouTubeContentScript() {
     })
   }
 
-  // Don't render anything if:
-  // - Focus mode is off
-  // - Not on home page
-  // - No focus topic set
+  // Don't render if focus mode is off or not on home page
   if (!isEnabled || !isHomePage) {
     return null
   }
