@@ -17,6 +17,13 @@ export interface YouTubeVideo {
   viewCount: string
 }
 
+// Result with pagination support
+export interface FetchVideosResult {
+  videos: YouTubeVideo[]
+  nextPageToken?: string
+  totalResults?: number
+}
+
 // YouTube API response types
 interface YouTubeSearchItem {
   kind: string
@@ -153,15 +160,18 @@ function parseAPIError(error: any, statusCode?: number): YouTubeAPIError {
 
 /**
  * Fetch top videos for a given topic using YouTube Data API v3
+ * Supports pagination with nextPageToken
  * 
  * @param topic - The search query/focus topic
- * @param maxResults - Maximum number of videos to return (default: 12)
- * @returns Array of YouTubeVideo objects or throws YouTubeAPIError
+ * @param maxResults - Maximum number of videos to return (default: 24)
+ * @param pageToken - Optional page token for pagination
+ * @returns FetchVideosResult with videos and nextPageToken
  */
 export async function fetchVideosForTopic(
   topic: string,
-  maxResults: number = 12
-): Promise<YouTubeVideo[]> {
+  maxResults: number = 24,
+  pageToken?: string
+): Promise<FetchVideosResult> {
   // Validate topic
   if (!topic || topic.trim().length === 0) {
     throw {
@@ -190,17 +200,22 @@ export async function fetchVideosForTopic(
   const params = new URLSearchParams({
     part: "snippet",
     q: topic.trim(),
-    type: "video", // Filter to only videos (not playlists or channels)
-    maxResults: Math.min(maxResults, 50).toString(), // API max is 50
-    order: "relevance", // Most relevant first
+    type: "video",
+    maxResults: Math.min(maxResults, 50).toString(),
+    order: "relevance",
     safeSearch: "moderate",
     key: apiKey
   })
+  
+  // Add page token if provided
+  if (pageToken) {
+    params.append("pageToken", pageToken)
+  }
 
   const url = `${baseUrl}?${params.toString()}`
 
   try {
-    console.log(`[YouTube API] Fetching videos for topic: "${topic}"`)
+    console.log(`[YouTube API] Fetching videos for topic: "${topic}"${pageToken ? ` (page: ${pageToken})` : ""}`)
     
     const response = await fetch(url)
     const data = await response.json()
@@ -220,7 +235,7 @@ export async function fetchVideosForTopic(
     })
 
     if (validItems.length === 0) {
-      return []
+      return { videos: [], nextPageToken: searchResponse.nextPageToken, totalResults: searchResponse.pageInfo.totalResults }
     }
 
     // Get video IDs and channel IDs for additional details
@@ -265,7 +280,11 @@ export async function fetchVideosForTopic(
     })
 
     console.log(`[YouTube API] Found ${videos.length} videos for topic: "${topic}"`)
-    return videos
+    return {
+      videos,
+      nextPageToken: searchResponse.nextPageToken,
+      totalResults: searchResponse.pageInfo.totalResults
+    }
 
   } catch (error) {
     // Handle network errors

@@ -24,16 +24,10 @@ const BLOCKED_PATHS = [
   "/shorts"
 ]
 
-// Use overlay anchor to position over YouTube's content area
+// Use overlay anchor positioned at body level for stability
+// This prevents remounting when YouTube's DOM changes during scroll
 export const getOverlayAnchor: PlasmoGetOverlayAnchor = async () => {
-  // Target YouTube's primary content area on home page
-  const primary = document.querySelector("ytd-browse[page-subtype='home'] #primary")
-  if (primary) return primary
-  
-  // Fallback
-  const pageManager = document.querySelector("ytd-page-manager")
-  if (pageManager) return pageManager
-  
+  // Use body as anchor for maximum stability
   return document.body
 }
 
@@ -184,26 +178,51 @@ function YouTubeContentScript() {
 
   const [videos, setVideos] = useState<YouTubeVideo[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isHomePage, setIsHomePage] = useState(false)
   const [wasRedirected, setWasRedirected] = useState(false)
+  const [nextPageToken, setNextPageToken] = useState<string | undefined>(undefined)
+  const [hasMore, setHasMore] = useState(true)
   
   // Track previous enabled state to detect when user turns off
-  const prevEnabledRef = useRef<boolean | undefined>(undefined)
+  // Start with null to indicate "not yet initialized"
+  const prevEnabledRef = useRef<boolean | null>(null)
+  // Track if initial fetch has been done
+  const initialFetchDone = useRef(false)
+  // Track if storage has been loaded
+  const storageLoaded = useRef(false)
+  // Track previous topic to detect changes
+  const prevTopicRef = useRef<string | undefined>(undefined)
+  // Prevent reload loop
+  const hasReloaded = useRef(false)
 
   // ===== HANDLE TOGGLE OFF: Reload page to restore YouTube =====
   useEffect(() => {
-    // Skip first render
-    if (prevEnabledRef.current === undefined) {
-      prevEnabledRef.current = isEnabled
+    // Prevent any reload logic if we've already triggered one
+    if (hasReloaded.current) return
+    
+    // Wait for storage to actually load (isEnabled won't be undefined)
+    if (isEnabled === undefined) {
       return
     }
     
-    // If user turned OFF focus mode, reload to restore YouTube
+    // Mark storage as loaded and set initial value
+    if (!storageLoaded.current) {
+      storageLoaded.current = true
+      prevEnabledRef.current = isEnabled
+      console.log("[CageClock] Storage loaded, initial isEnabled:", isEnabled)
+      return
+    }
+    
+    // Only reload if user explicitly turned OFF focus mode (was true, now false)
+    // This should only happen from the popup toggle, not from storage flickering
     if (prevEnabledRef.current === true && isEnabled === false) {
       console.log("[CageClock] Focus mode disabled - reloading to restore YouTube")
+      hasReloaded.current = true
       removeCSS()
       window.location.reload()
+      return
     }
     
     prevEnabledRef.current = isEnabled
@@ -278,12 +297,32 @@ function YouTubeContentScript() {
 
   // Fetch videos when focus mode is enabled and we have a topic
   useEffect(() => {
-    if (isEnabled && focusTopic && isHomePage) {
+    // Skip if storage hasn't loaded yet
+    if (isEnabled === undefined || focusTopic === undefined) return
+    
+    // Check if topic changed
+    const topicChanged = prevTopicRef.current !== undefined && prevTopicRef.current !== focusTopic
+    
+    if (topicChanged) {
+      // Topic changed - reset and refetch
+      initialFetchDone.current = false
+      setVideos([])
+      setNextPageToken(undefined)
+      setHasMore(true)
+    }
+    
+    prevTopicRef.current = focusTopic
+    
+    // Fetch if enabled, has topic, on home page, and haven't fetched yet
+    if (isEnabled && focusTopic && isHomePage && !initialFetchDone.current) {
+      initialFetchDone.current = true
       fetchVideos()
     }
   }, [isEnabled, focusTopic, isHomePage])
 
   const fetchVideos = async () => {
+    if (isLoading) return // Prevent duplicate fetches
+    
     setIsLoading(true)
     setError(null)
     
@@ -295,6 +334,8 @@ function YouTubeContentScript() {
       
       if (response?.success) {
         setVideos(response.videos)
+        setNextPageToken(response.nextPageToken)
+        setHasMore(!!response.nextPageToken)
         console.log("[CageClock] Loaded", response.videos.length, "videos")
       } else {
         const errorMsg = response?.error?.message || "Failed to fetch videos"
@@ -309,7 +350,36 @@ function YouTubeContentScript() {
     }
   }
 
+  const loadMoreVideos = async () => {
+    if (isLoadingMore || !nextPageToken || !hasMore) return
+    
+    setIsLoadingMore(true)
+    
+    try {
+      const response = await chrome.runtime.sendMessage({ 
+        type: "FETCH_MORE_VIDEOS",
+        pageToken: nextPageToken
+      })
+      
+      if (response?.success) {
+        setVideos(prevVideos => [...prevVideos, ...response.videos])
+        setNextPageToken(response.nextPageToken)
+        setHasMore(!!response.nextPageToken)
+        console.log("[CageClock] Loaded", response.videos.length, "more videos. Total:", videos.length + response.videos.length)
+      } else {
+        console.error("[CageClock] Error loading more videos:", response?.error)
+      }
+    } catch (err) {
+      console.error("[CageClock] Communication error:", err)
+    } finally {
+      setIsLoadingMore(false)
+    }
+  }
+
   const handleRefresh = () => {
+    initialFetchDone.current = false
+    setNextPageToken(undefined)
+    setHasMore(true)
     chrome.runtime.sendMessage({ type: "CLEAR_CACHE" }, () => {
       fetchVideos()
     })
@@ -339,8 +409,11 @@ function YouTubeContentScript() {
       videos={videos}
       topic={focusTopic}
       isLoading={isLoading}
+      isLoadingMore={isLoadingMore}
       error={error}
       onRefresh={handleRefresh}
+      onLoadMore={loadMoreVideos}
+      hasMore={hasMore}
       showRedirectBanner={wasRedirected}
     />
   )

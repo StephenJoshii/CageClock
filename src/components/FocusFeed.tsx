@@ -167,8 +167,11 @@ interface FocusFeedProps {
   videos: YouTubeVideo[]
   topic: string
   isLoading: boolean
+  isLoadingMore?: boolean
   error: string | null
   onRefresh: () => void
+  onLoadMore?: () => void
+  hasMore?: boolean
   showRedirectBanner?: boolean
 }
 
@@ -179,8 +182,11 @@ export function FocusFeed({
   videos,
   topic,
   isLoading,
+  isLoadingMore = false,
   error,
   onRefresh,
+  onLoadMore,
+  hasMore = true,
   showRedirectBanner
 }: FocusFeedProps) {
   const [showBanner, setShowBanner] = useState(showRedirectBanner)
@@ -250,11 +256,44 @@ export function FocusFeed({
 
       {/* Video Grid */}
       {!isLoading && !error && videos.length > 0 && (
-        <div className="cageclock-video-grid">
-          {videos.map((video, index) => (
-            <VideoCard key={video.videoId} video={video} index={index} />
-          ))}
-        </div>
+        <>
+          <div className="cageclock-video-grid">
+            {videos.map((video, index) => (
+              <VideoCard key={video.videoId} video={video} index={index} />
+            ))}
+          </div>
+          
+          {/* Load More Button */}
+          {hasMore && onLoadMore && (
+            <div className="cageclock-load-more-container">
+              <button
+                className="cageclock-load-more-btn"
+                onClick={onLoadMore}
+                disabled={isLoadingMore}
+              >
+                {isLoadingMore ? (
+                  <>
+                    <span className="cageclock-spinner"></span>
+                    Loading more videos...
+                  </>
+                ) : (
+                  <>
+                    <span className="cageclock-load-icon">▼</span>
+                    Load More Videos
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+          
+          {/* End of Results */}
+          {!hasMore && videos.length > 0 && (
+            <div className="cageclock-end-of-results">
+              <span>🎉</span>
+              <p>You've seen all videos for "{topic}"</p>
+            </div>
+          )}
+        </>
       )}
 
       {/* Empty State */}

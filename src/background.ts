@@ -2,7 +2,8 @@ import { STORAGE_KEYS, type FocusSettings } from "./storage"
 import { 
   fetchVideosForTopic, 
   fetchVideosFromStorage,
-  type YouTubeVideo, 
+  type YouTubeVideo,
+  type FetchVideosResult,
   type YouTubeAPIError,
   YOUTUBE_API_KEY_STORAGE,
   setYouTubeAPIKey,
@@ -126,8 +127,8 @@ async function performAlgorithmNudge(topic: string) {
   try {
     // Fetch videos for the topic (this triggers a YouTube API search)
     // The API call itself helps signal interest to YouTube
-    const videos = await fetchVideosForTopic(topic, 5)
-    console.log(`[AlgorithmNudge] Found ${videos.length} videos for "${topic}"`)
+    const result = await fetchVideosForTopic(topic, 5)
+    console.log(`[AlgorithmNudge] Found ${result.videos.length} videos for "${topic}"`)
     
     // Optionally: Open a video in the background to strengthen the signal
     // This is more aggressive but more effective
@@ -259,42 +260,45 @@ const CACHE_DURATION_MS = 30 * 60 * 1000 // 30 minutes
  * Fetch and cache videos for the current focus topic
  * Returns cached videos if available and not expired
  */
-async function fetchAndCacheVideos(forceFresh: boolean = false): Promise<YouTubeVideo[]> {
+async function fetchAndCacheVideos(forceFresh: boolean = false): Promise<FetchVideosResult> {
   try {
     const result = await chrome.storage.local.get([
       STORAGE_KEYS.FOCUS_TOPIC,
       CACHED_VIDEOS_KEY,
       CACHED_VIDEOS_TOPIC_KEY,
-      CACHED_VIDEOS_TIME_KEY
+      CACHED_VIDEOS_TIME_KEY,
+      "cachedNextPageToken"
     ])
     
     const currentTopic = result[STORAGE_KEYS.FOCUS_TOPIC]
     const cachedVideos = result[CACHED_VIDEOS_KEY]
     const cachedTopic = result[CACHED_VIDEOS_TOPIC_KEY]
     const cachedTime = result[CACHED_VIDEOS_TIME_KEY]
+    const cachedNextPageToken = result["cachedNextPageToken"]
     
     // Check if we have valid cached videos
     if (!forceFresh && cachedVideos && cachedTopic === currentTopic) {
       const age = Date.now() - (cachedTime || 0)
       if (age < CACHE_DURATION_MS) {
         console.log(`[CageClock] Using cached videos (${Math.round(age / 1000)}s old)`)
-        return cachedVideos as YouTubeVideo[]
+        return { videos: cachedVideos as YouTubeVideo[], nextPageToken: cachedNextPageToken }
       }
     }
     
     // Fetch fresh videos
     console.log(`[CageClock] Fetching fresh videos for topic: "${currentTopic}"`)
-    const videos = await fetchVideosFromStorage()
+    const fetchResult = await fetchVideosForTopic(currentTopic, 24)
     
     // Cache the results
     await chrome.storage.local.set({
-      [CACHED_VIDEOS_KEY]: videos,
+      [CACHED_VIDEOS_KEY]: fetchResult.videos,
       [CACHED_VIDEOS_TOPIC_KEY]: currentTopic,
-      [CACHED_VIDEOS_TIME_KEY]: Date.now()
+      [CACHED_VIDEOS_TIME_KEY]: Date.now(),
+      "cachedNextPageToken": fetchResult.nextPageToken
     })
     
-    console.log(`[CageClock] Cached ${videos.length} videos`)
-    return videos
+    console.log(`[CageClock] Cached ${fetchResult.videos.length} videos`)
+    return fetchResult
     
   } catch (error) {
     const apiError = error as YouTubeAPIError
@@ -328,8 +332,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     case "FETCH_VIDEOS":
       // Fetch videos for the current focus topic
       fetchAndCacheVideos(message.forceFresh)
-        .then((videos) => {
-          sendResponse({ success: true, videos })
+        .then((result) => {
+          sendResponse({ success: true, videos: result.videos, nextPageToken: result.nextPageToken })
         })
         .catch((error: YouTubeAPIError) => {
           sendResponse({ 
@@ -343,12 +347,43 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           })
         })
       return true // Keep the message channel open for async response
+    
+    case "FETCH_MORE_VIDEOS":
+      // Fetch additional videos with page token
+      chrome.storage.local.get([STORAGE_KEYS.FOCUS_TOPIC], async (result) => {
+        const topic = result[STORAGE_KEYS.FOCUS_TOPIC]
+        if (!topic) {
+          sendResponse({ success: false, error: { message: "No focus topic set" } })
+          return
+        }
+        
+        try {
+          const fetchResult = await fetchVideosForTopic(topic, 24, message.pageToken)
+          sendResponse({ 
+            success: true, 
+            videos: fetchResult.videos, 
+            nextPageToken: fetchResult.nextPageToken 
+          })
+        } catch (error) {
+          const apiError = error as YouTubeAPIError
+          sendResponse({ 
+            success: false, 
+            error: {
+              code: apiError.code,
+              message: apiError.message,
+              isQuotaError: apiError.isQuotaError,
+              isAuthError: apiError.isAuthError
+            }
+          })
+        }
+      })
+      return true
       
     case "FETCH_VIDEOS_FOR_TOPIC":
       // Fetch videos for a specific topic (without saving to storage)
-      fetchVideosForTopic(message.topic, message.maxResults || 12)
-        .then((videos) => {
-          sendResponse({ success: true, videos })
+      fetchVideosForTopic(message.topic, message.maxResults || 24, message.pageToken)
+        .then((result) => {
+          sendResponse({ success: true, videos: result.videos, nextPageToken: result.nextPageToken })
         })
         .catch((error: YouTubeAPIError) => {
           sendResponse({ 

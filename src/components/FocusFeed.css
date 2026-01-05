@@ -50,16 +50,35 @@ html:not([dark]) :host,
 /* ===== FEED CONTAINER ===== */
 /*
  * Plasmo overlay approach: The shadow host is positioned absolutely
- * over the anchor element (#primary on YouTube home page).
- * We use position: relative and let Plasmo handle the overlay positioning.
+ * over the YouTube content area. We use fixed positioning to ensure
+ * stability during scroll and prevent remounting issues.
  */
 
-/* Plasmo's overlay container - position and sizing */
+/* Plasmo's overlay container - position over YouTube's content */
 :host {
   display: block !important;
-  position: relative !important;
-  width: 100% !important;
+  position: fixed !important;
+  top: var(--ytd-masthead-height, 56px) !important;
+  left: var(--ytd-guide-width, 240px) !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: auto !important;
   background: var(--yt-bg-primary, #0f0f0f) !important;
+  z-index: 100 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+/* When guide is collapsed */
+ytd-app[guide-persistent-and-visible] ~ #cageclock-feed-host,
+:host-context(ytd-app[guide-persistent-and-visible]) {
+  left: var(--ytd-guide-width, 240px) !important;
+}
+
+/* When mini-guide is shown (collapsed sidebar) */
+ytd-app:not([guide-persistent-and-visible]) ~ #cageclock-feed-host,
+:host-context(ytd-app:not([guide-persistent-and-visible])) {
+  left: 72px !important;
 }
 
 .cageclock-focus-feed {
@@ -504,6 +523,99 @@ html:not([dark]) :host,
 
 .cageclock-feed-footer p {
   font-size: 12px;
+  color: var(--yt-text-secondary);
+  margin: 0;
+}
+
+/* ===== LOAD MORE BUTTON ===== */
+.cageclock-load-more-container {
+  display: flex;
+  justify-content: center;
+  margin: 32px 0;
+  padding: 0 24px;
+}
+
+.cageclock-load-more-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 400px;
+  padding: 14px 28px;
+  background: var(--yt-bg-secondary);
+  color: var(--yt-text-primary);
+  border: 1px solid var(--yt-border);
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: "Roboto", "Arial", sans-serif;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cageclock-load-more-btn:hover:not(:disabled) {
+  background: var(--yt-bg-hover);
+  border-color: var(--yt-accent);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--yt-shadow);
+}
+
+.cageclock-load-more-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.cageclock-load-more-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.cageclock-load-icon {
+  font-size: 10px;
+  transition: transform 0.3s ease;
+}
+
+.cageclock-load-more-btn:hover .cageclock-load-icon {
+  transform: translateY(2px);
+  animation: bounce 0.5s ease infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(4px); }
+}
+
+/* Spinner for loading state */
+.cageclock-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--yt-border);
+  border-top-color: var(--yt-accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* End of Results */
+.cageclock-end-of-results {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin: 32px 0;
+  padding: 24px;
+  text-align: center;
+}
+
+.cageclock-end-of-results span {
+  font-size: 32px;
+}
+
+.cageclock-end-of-results p {
+  font-size: 14px;
   color: var(--yt-text-secondary);
   margin: 0;
 }
