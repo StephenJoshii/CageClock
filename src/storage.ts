@@ -11,7 +11,10 @@ export const STORAGE_KEYS = {
   YOUTUBE_API_KEY: "youtubeApiKey",
   CACHED_VIDEOS: "cachedVideos",
   CACHED_VIDEOS_TOPIC: "cachedVideosTopic",
-  CACHED_VIDEOS_TIME: "cachedVideosTime"
+  CACHED_VIDEOS_TIME: "cachedVideosTime",
+  // Break timer keys
+  BREAK_MODE: "breakMode",
+  BREAK_END_TIME: "breakEndTime"
 } as const
 
 const storage = new Storage({ area: "local" })

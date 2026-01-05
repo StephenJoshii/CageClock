@@ -12,6 +12,11 @@ function IndexPopup() {
   const [apiKey, setApiKey] = useState("")
   const [hasApiKey, setHasApiKey] = useState(false)
   const [apiKeyStatus, setApiKeyStatus] = useState("")
+  
+  // Break mode state
+  const [isOnBreak, setIsOnBreak] = useState(false)
+  const [breakEndTime, setBreakEndTime] = useState<number | null>(null)
+  const [remainingTime, setRemainingTime] = useState("")
 
   useEffect(() => {
     // Load saved settings on mount
@@ -26,7 +31,46 @@ function IndexPopup() {
         setHasApiKey(response.hasApiKey)
       }
     })
+    
+    // Check break status
+    checkBreakStatus()
   }, [])
+  
+  // Update countdown timer
+  useEffect(() => {
+    if (!isOnBreak || !breakEndTime) return
+    
+    const updateTimer = () => {
+      const remaining = Math.max(0, breakEndTime - Date.now())
+      if (remaining === 0) {
+        setIsOnBreak(false)
+        setBreakEndTime(null)
+        setRemainingTime("")
+        // Refresh enabled state
+        getSettings().then((settings) => {
+          setIsEnabled(settings.isEnabled)
+        })
+        return
+      }
+      
+      const minutes = Math.floor(remaining / 60000)
+      const seconds = Math.floor((remaining % 60000) / 1000)
+      setRemainingTime(`${minutes}:${seconds.toString().padStart(2, "0")}`)
+    }
+    
+    updateTimer()
+    const interval = setInterval(updateTimer, 1000)
+    return () => clearInterval(interval)
+  }, [isOnBreak, breakEndTime])
+  
+  const checkBreakStatus = () => {
+    chrome.runtime.sendMessage({ type: "GET_BREAK_STATUS" }, (response) => {
+      if (response?.success) {
+        setIsOnBreak(response.isOnBreak)
+        setBreakEndTime(response.endTime)
+      }
+    })
+  }
 
   const handleToggle = async () => {
     const newValue = !isEnabled
@@ -74,6 +118,30 @@ function IndexPopup() {
       }
     )
   }
+  
+  const handleStartBreak = () => {
+    chrome.runtime.sendMessage({ type: "START_BREAK" }, (response) => {
+      if (response?.success) {
+        setIsOnBreak(true)
+        setBreakEndTime(response.endTime)
+        setIsEnabled(false)
+      }
+    })
+  }
+  
+  const handleEndBreak = () => {
+    chrome.runtime.sendMessage({ type: "END_BREAK" }, (response) => {
+      if (response?.success) {
+        setIsOnBreak(false)
+        setBreakEndTime(null)
+        setRemainingTime("")
+        // Refresh enabled state
+        getSettings().then((settings) => {
+          setIsEnabled(settings.isEnabled)
+        })
+      }
+    })
+  }
 
   return (
     <div className="popup-container">
@@ -118,6 +186,31 @@ function IndexPopup() {
         </div>
 
         {isSaving && <div className="saving-indicator">Saving...</div>}
+        
+        {/* Emergency Exit / Break Mode */}
+        {isOnBreak ? (
+          <div className="break-panel">
+            <div className="break-header">
+              <span className="break-icon">☕</span>
+              <span className="break-title">Break Mode Active</span>
+            </div>
+            <div className="break-timer">{remainingTime}</div>
+            <p className="break-message">Take a breather! Focus mode will resume automatically.</p>
+            <button 
+              className="end-break-btn"
+              onClick={handleEndBreak}
+            >
+              End Break Early
+            </button>
+          </div>
+        ) : isEnabled && (
+          <button 
+            className="emergency-exit-btn"
+            onClick={handleStartBreak}
+          >
+            🚪 Emergency Exit (10 min break)
+          </button>
+        )}
         
         {/* Settings Toggle */}
         <button 

@@ -259,3 +259,76 @@ body {
   color: #667eea;
   font-weight: 500;
 }
+
+/* Emergency Exit Button */
+.emergency-exit-btn {
+  width: 100%;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.emergency-exit-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);
+}
+
+/* Break Panel */
+.break-panel {
+  background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  color: white;
+}
+
+.break-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.break-icon {
+  font-size: 24px;
+}
+
+.break-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.break-timer {
+  font-size: 36px;
+  font-weight: 700;
+  font-family: "SF Mono", Monaco, monospace;
+  margin: 12px 0;
+}
+
+.break-message {
+  font-size: 12px;
+  opacity: 0.9;
+  margin-bottom: 16px;
+}
+
+.end-break-btn {
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 6px;
+  color: white;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.end-break-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}

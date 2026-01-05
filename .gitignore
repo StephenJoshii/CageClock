@@ -6,11 +6,14 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Plasmo build outputs
+.plasmo/
+build/
+dist/
+
 # Next.js
 .next/
 out/
-build/
-dist/
 
 # Environment variables
 .env
@@ -41,10 +44,12 @@ Thumbs.db
 logs/
 *.log
 
-# Large files
+# Large files / packaged extensions
 *.zip
 *.tar.gz
 *.rar
+*.crx
+*.pem
 
 # Supabase
 .supabase/
@@ -52,3 +57,7 @@ logs/
 # Temporary files
 tmp/
 temp/
+
+# Keys (never commit API keys!)
+keys/
+*.key

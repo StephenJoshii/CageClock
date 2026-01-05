@@ -13,6 +13,14 @@ export {}
 
 console.log("CageClock background service worker started")
 
+// ===== ALGORITHM NUDGE ALARM =====
+const ALGORITHM_NUDGE_ALARM = "algorithmNudge"
+const NUDGE_INTERVAL_MINUTES = 30
+
+// ===== BREAK MODE CONSTANTS =====
+const BREAK_DURATION_MS = 10 * 60 * 1000 // 10 minutes
+const BREAK_CHECK_ALARM = "breakCheck"
+
 // Listen for changes in chrome.storage.local
 chrome.storage.onChanged.addListener((changes, areaName) => {
   if (areaName !== "local") return
@@ -37,21 +45,29 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
     console.log(`Focus topic changed: "${oldValue}" → "${newValue}"`)
     onFocusTopicChanged(newValue)
   }
+  
+  // Check if break mode changed
+  if (STORAGE_KEYS.BREAK_MODE in changes) {
+    if (changes[STORAGE_KEYS.BREAK_MODE].newValue === true) {
+      onBreakModeEnabled()
+    }
+  }
 })
 
 // Handler when focus mode is enabled
 function onFocusModeEnabled() {
   console.log("🎯 Focus mode ENABLED")
   
+  // Start the Algorithm Nudge alarm
+  startAlgorithmNudge()
+  
   // Get current focus topic
   chrome.storage.local.get([STORAGE_KEYS.FOCUS_TOPIC], (result) => {
     const topic = result[STORAGE_KEYS.FOCUS_TOPIC] || "your goal"
     console.log(`Now focusing on: ${topic}`)
     
-    // You can add additional logic here, such as:
-    // - Setting up alarms for reminders
-    // - Modifying browser behavior
-    // - Sending notifications
+    // Perform initial nudge
+    performAlgorithmNudge(topic)
   })
 }
 
@@ -59,26 +75,165 @@ function onFocusModeEnabled() {
 function onFocusModeDisabled() {
   console.log("💤 Focus mode DISABLED")
   
-  // You can add cleanup logic here, such as:
-  // - Clearing alarms
-  // - Resetting any modifications
+  // Stop the Algorithm Nudge alarm
+  stopAlgorithmNudge()
 }
 
 // Handler when focus topic changes
 function onFocusTopicChanged(newTopic: string) {
   if (newTopic) {
     console.log(`📝 Focus topic updated to: ${newTopic}`)
+    // Perform a nudge with the new topic
+    performAlgorithmNudge(newTopic)
   } else {
     console.log("📝 Focus topic cleared")
   }
 }
 
+// ===== ALGORITHM NUDGE FUNCTIONS =====
+
+/**
+ * Start the Algorithm Nudge alarm (runs every 30 minutes)
+ */
+function startAlgorithmNudge() {
+  chrome.alarms.create(ALGORITHM_NUDGE_ALARM, {
+    delayInMinutes: NUDGE_INTERVAL_MINUTES,
+    periodInMinutes: NUDGE_INTERVAL_MINUTES
+  })
+  console.log(`[AlgorithmNudge] Started - will nudge every ${NUDGE_INTERVAL_MINUTES} minutes`)
+}
+
+/**
+ * Stop the Algorithm Nudge alarm
+ */
+function stopAlgorithmNudge() {
+  chrome.alarms.clear(ALGORITHM_NUDGE_ALARM)
+  console.log("[AlgorithmNudge] Stopped")
+}
+
+/**
+ * Perform an algorithm nudge by doing a hidden search
+ * This influences YouTube's recommendation algorithm
+ */
+async function performAlgorithmNudge(topic: string) {
+  if (!topic) {
+    console.log("[AlgorithmNudge] No topic set, skipping")
+    return
+  }
+  
+  console.log(`[AlgorithmNudge] Nudging algorithm with topic: "${topic}"`)
+  
+  try {
+    // Fetch videos for the topic (this triggers a YouTube API search)
+    // The API call itself helps signal interest to YouTube
+    const videos = await fetchVideosForTopic(topic, 5)
+    console.log(`[AlgorithmNudge] Found ${videos.length} videos for "${topic}"`)
+    
+    // Optionally: Open a video in the background to strengthen the signal
+    // This is more aggressive but more effective
+    // We'll just do the search for now
+    
+  } catch (error) {
+    console.error("[AlgorithmNudge] Error:", error)
+  }
+}
+
+// ===== BREAK MODE FUNCTIONS =====
+
+/**
+ * Called when break mode is enabled
+ */
+function onBreakModeEnabled() {
+  console.log("☕ Break mode ENABLED - 10 minute break started")
+  
+  // Set up alarm to end break
+  chrome.alarms.create(BREAK_CHECK_ALARM, {
+    delayInMinutes: 10 // 10 minute break
+  })
+}
+
+/**
+ * End the break and re-enable focus mode
+ */
+async function endBreakMode() {
+  console.log("☕ Break mode ENDED - resuming focus")
+  
+  await chrome.storage.local.set({
+    [STORAGE_KEYS.BREAK_MODE]: false,
+    [STORAGE_KEYS.BREAK_END_TIME]: null,
+    [STORAGE_KEYS.IS_ENABLED]: true
+  })
+  
+  // Notify any open YouTube tabs
+  const tabs = await chrome.tabs.query({ url: "*://*.youtube.com/*" })
+  for (const tab of tabs) {
+    if (tab.id) {
+      chrome.tabs.sendMessage(tab.id, { type: "BREAK_ENDED" }).catch(() => {})
+    }
+  }
+}
+
+/**
+ * Start emergency break mode
+ */
+async function startBreakMode(): Promise<{ success: boolean; endTime: number }> {
+  const endTime = Date.now() + BREAK_DURATION_MS
+  
+  await chrome.storage.local.set({
+    [STORAGE_KEYS.BREAK_MODE]: true,
+    [STORAGE_KEYS.BREAK_END_TIME]: endTime,
+    [STORAGE_KEYS.IS_ENABLED]: false // Disable focus mode during break
+  })
+  
+  // Set alarm to end break
+  chrome.alarms.create(BREAK_CHECK_ALARM, {
+    when: endTime
+  })
+  
+  console.log(`☕ Break started, ends at ${new Date(endTime).toLocaleTimeString()}`)
+  
+  return { success: true, endTime }
+}
+
+// ===== ALARM LISTENER =====
+chrome.alarms.onAlarm.addListener(async (alarm) => {
+  console.log(`[Alarm] Fired: ${alarm.name}`)
+  
+  if (alarm.name === ALGORITHM_NUDGE_ALARM) {
+    // Check if focus mode is still enabled
+    const result = await chrome.storage.local.get([STORAGE_KEYS.IS_ENABLED, STORAGE_KEYS.FOCUS_TOPIC])
+    if (result[STORAGE_KEYS.IS_ENABLED] && result[STORAGE_KEYS.FOCUS_TOPIC]) {
+      performAlgorithmNudge(result[STORAGE_KEYS.FOCUS_TOPIC])
+    }
+  }
+  
+  if (alarm.name === BREAK_CHECK_ALARM) {
+    // Break is over, re-enable focus mode
+    endBreakMode()
+  }
+})
+
 // Initialize: log current settings on service worker start
 async function initializeSettings() {
   const result = await chrome.storage.local.get([
     STORAGE_KEYS.IS_ENABLED,
-    STORAGE_KEYS.FOCUS_TOPIC
+    STORAGE_KEYS.FOCUS_TOPIC,
+    STORAGE_KEYS.BREAK_MODE,
+    STORAGE_KEYS.BREAK_END_TIME
   ])
+  
+  // Check if there's an ongoing break
+  if (result[STORAGE_KEYS.BREAK_MODE] && result[STORAGE_KEYS.BREAK_END_TIME]) {
+    const endTime = result[STORAGE_KEYS.BREAK_END_TIME]
+    if (Date.now() < endTime) {
+      // Break is still active, set alarm for remaining time
+      chrome.alarms.create(BREAK_CHECK_ALARM, { when: endTime })
+      console.log(`☕ Break in progress, ends at ${new Date(endTime).toLocaleTimeString()}`)
+    } else {
+      // Break has expired, end it
+      endBreakMode()
+    }
+  }
   
   const settings: FocusSettings = {
     isEnabled: result[STORAGE_KEYS.IS_ENABLED] ?? false,
@@ -89,6 +244,8 @@ async function initializeSettings() {
   
   if (settings.isEnabled) {
     console.log(`🎯 Focus mode is active, focusing on: ${settings.focusTopic || "not set"}`)
+    // Restart the nudge alarm if focus mode was already on
+    startAlgorithmNudge()
   }
 }
 
@@ -231,6 +388,47 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     case "CLEAR_CACHE":
       // Clear the video cache
       clearVideoCache()
+        .then(() => {
+          sendResponse({ success: true })
+        })
+        .catch((error) => {
+          sendResponse({ success: false, error: error.message })
+        })
+      return true
+      
+    case "START_BREAK":
+      // Start emergency break mode
+      startBreakMode()
+        .then((result) => {
+          sendResponse(result)
+        })
+        .catch((error) => {
+          sendResponse({ success: false, error: error.message })
+        })
+      return true
+      
+    case "GET_BREAK_STATUS":
+      // Get current break status
+      chrome.storage.local.get([STORAGE_KEYS.BREAK_MODE, STORAGE_KEYS.BREAK_END_TIME])
+        .then((result) => {
+          const isOnBreak = result[STORAGE_KEYS.BREAK_MODE] ?? false
+          const endTime = result[STORAGE_KEYS.BREAK_END_TIME] ?? null
+          const remainingMs = endTime ? Math.max(0, endTime - Date.now()) : 0
+          sendResponse({ 
+            success: true, 
+            isOnBreak, 
+            endTime, 
+            remainingMs 
+          })
+        })
+        .catch((error) => {
+          sendResponse({ success: false, error: error.message })
+        })
+      return true
+      
+    case "END_BREAK":
+      // End break early
+      endBreakMode()
         .then(() => {
           sendResponse({ success: true })
         })

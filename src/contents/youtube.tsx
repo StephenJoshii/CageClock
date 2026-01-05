@@ -1,16 +1,41 @@
-import type { PlasmoCSConfig } from "plasmo"
+import cssText from "data-text:../components/FocusFeed.css"
+import type { PlasmoCSConfig, PlasmoGetInlineAnchor, PlasmoGetStyle } from "plasmo"
 import { useEffect, useState } from "react"
 
 import { Storage } from "@plasmohq/storage"
 import { useStorage } from "@plasmohq/storage/hook"
 
+import { FocusFeed } from "../components/FocusFeed"
 import { STORAGE_KEYS } from "../storage"
+import type { YouTubeVideo } from "../youtube-api"
 
 // Plasmo content script configuration
 export const config: PlasmoCSConfig = {
   matches: ["https://www.youtube.com/*", "https://youtube.com/*"],
-  run_at: "document_start", // Run as early as possible to prevent flicker
+  run_at: "document_end", // Changed to document_end to ensure DOM is ready
   all_frames: false
+}
+
+// Blocked paths that should be redirected when in focus mode
+const BLOCKED_PATHS = [
+  "/feed/trending",
+  "/gaming",
+  "/feed/explore",
+  "/shorts"
+]
+
+// Tell Plasmo where to inject our React component
+export const getInlineAnchor: PlasmoGetInlineAnchor = async () => {
+  // Wait for YouTube's page container to be ready
+  const anchor = document.querySelector("ytd-browse[page-subtype='home'] #contents")
+  return anchor || document.body
+}
+
+// Inject our CSS styles
+export const getStyle: PlasmoGetStyle = () => {
+  const style = document.createElement("style")
+  style.textContent = cssText
+  return style
 }
 
 // CSS selectors for YouTube elements to hide
@@ -146,7 +171,90 @@ function YouTubeContentScript() {
     key: STORAGE_KEYS.IS_ENABLED,
     instance: new Storage({ area: "local" })
   })
+  
+  const [focusTopic] = useStorage<string>({
+    key: STORAGE_KEYS.FOCUS_TOPIC,
+    instance: new Storage({ area: "local" })
+  })
+  
+  const [breakMode] = useStorage<boolean>({
+    key: STORAGE_KEYS.BREAK_MODE,
+    instance: new Storage({ area: "local" })
+  })
 
+  const [videos, setVideos] = useState<YouTubeVideo[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [isHomePage, setIsHomePage] = useState(false)
+  const [wasRedirected, setWasRedirected] = useState(false)
+
+  // ===== REDIRECTOR: Block Trending, Gaming, etc. =====
+  useEffect(() => {
+    // Skip if focus mode is off or on break
+    if (!isEnabled || breakMode) return
+    
+    const checkAndRedirect = () => {
+      const currentPath = window.location.pathname
+      
+      // Check if current path is blocked
+      const isBlocked = BLOCKED_PATHS.some(blockedPath => 
+        currentPath.startsWith(blockedPath)
+      )
+      
+      if (isBlocked) {
+        console.log(`[CageClock] Redirecting from blocked page: ${currentPath}`)
+        setWasRedirected(true)
+        // Redirect to home page
+        window.location.href = "https://www.youtube.com/"
+      }
+    }
+    
+    // Check immediately
+    checkAndRedirect()
+    
+    // Listen for YouTube's SPA navigation (yt-navigate-finish)
+    const handleNavigation = () => {
+      checkAndRedirect()
+    }
+    
+    document.addEventListener("yt-navigate-finish", handleNavigation)
+    
+    return () => {
+      document.removeEventListener("yt-navigate-finish", handleNavigation)
+    }
+  }, [isEnabled, breakMode])
+
+  // Check if we're on the YouTube home page
+  useEffect(() => {
+    const checkHomePage = () => {
+      const isHome = window.location.pathname === "/" || 
+                     window.location.pathname === "/feed/subscriptions" ||
+                     document.querySelector("ytd-browse[page-subtype='home']") !== null
+      setIsHomePage(isHome)
+    }
+    
+    checkHomePage()
+    
+    // Listen for YouTube's SPA navigation
+    const observer = new MutationObserver(() => {
+      checkHomePage()
+    })
+    
+    observer.observe(document.body, { 
+      childList: true, 
+      subtree: true 
+    })
+    
+    // Also listen for popstate (back/forward)
+    window.addEventListener("popstate", checkHomePage)
+    
+    return () => {
+      observer.disconnect()
+      window.removeEventListener("popstate", checkHomePage)
+    }
+  }, [])
+
+  // Handle CSS injection for hiding native content
   useEffect(() => {
     console.log("[CageClock] useEffect triggered, isEnabled:", isEnabled)
     
@@ -165,8 +273,77 @@ function YouTubeContentScript() {
     }
   }, [isEnabled])
 
-  // This component doesn't render anything visible
-  return null
+  // Fetch videos when focus mode is enabled and we have a topic
+  useEffect(() => {
+    if (isEnabled && focusTopic && isHomePage) {
+      fetchVideos()
+    }
+  }, [isEnabled, focusTopic, isHomePage])
+
+  const fetchVideos = async () => {
+    setIsLoading(true)
+    setError(null)
+    
+    try {
+      const response = await chrome.runtime.sendMessage({ 
+        type: "FETCH_VIDEOS",
+        forceFresh: false
+      })
+      
+      if (response?.success) {
+        setVideos(response.videos)
+        console.log("[CageClock] Loaded", response.videos.length, "videos")
+      } else {
+        const errorMsg = response?.error?.message || "Failed to fetch videos"
+        setError(errorMsg)
+        console.error("[CageClock] Error fetching videos:", errorMsg)
+      }
+    } catch (err) {
+      setError("Failed to communicate with extension")
+      console.error("[CageClock] Communication error:", err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleRefresh = () => {
+    chrome.runtime.sendMessage({ type: "CLEAR_CACHE" }, () => {
+      fetchVideos()
+    })
+  }
+
+  // Don't render anything if:
+  // - Focus mode is off
+  // - Not on home page
+  // - No focus topic set
+  if (!isEnabled || !isHomePage) {
+    return null
+  }
+
+  if (!focusTopic) {
+    return (
+      <div className="cageclock-focus-feed">
+        <div className="cageclock-empty">
+          <span className="cageclock-empty-icon">🎯</span>
+          <p>No focus topic set</p>
+          <p className="cageclock-empty-hint">
+            Click the CageClock extension icon to set your focus topic
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <FocusFeed
+      videos={videos}
+      topic={focusTopic}
+      isLoading={isLoading}
+      error={error}
+      onRefresh={handleRefresh}
+      showRedirectBanner={wasRedirected}
+    />
+  )
 }
 
 export default YouTubeContentScript
