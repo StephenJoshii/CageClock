@@ -1,0 +1,16 @@
+/*
+ * CageClock - YouTube Focus Mode Styles
+ * This CSS is injected as a content script stylesheet for early loading
+ * It works in conjunction with youtube.tsx for dynamic control
+ */
+
+/* 
+ * IMPORTANT: This file provides the initial CSS injection
+ * The actual show/hide logic is controlled by the React component
+ * based on the extension's enabled state
+ */
+
+/* Base styles that are always applied */
+#cageclock-focus-style {
+  /* Marker element - actual styles are injected dynamically */
+}

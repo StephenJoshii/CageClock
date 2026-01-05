@@ -27,6 +27,10 @@
   "manifest": {
     "permissions": [
       "storage"
+    ],
+    "host_permissions": [
+      "https://www.youtube.com/*",
+      "https://youtube.com/*"
     ]
   }
 }

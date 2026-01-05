@@ -26,5 +26,33 @@
   },
   "permissions": [
     "storage"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.youtube.com/*",
+        "https://youtube.com/*"
+      ],
+      "js": [
+        "../src/contents/youtube-early.ts"
+      ],
+      "run_at": "document_start",
+      "all_frames": false
+    },
+    {
+      "matches": [
+        "https://www.youtube.com/*",
+        "https://youtube.com/*"
+      ],
+      "js": [
+        "static/contents/youtube.tsx"
+      ],
+      "run_at": "document_start",
+      "all_frames": false
+    }
+  ],
+  "host_permissions": [
+    "https://www.youtube.com/*",
+    "https://youtube.com/*"
   ]
 }
