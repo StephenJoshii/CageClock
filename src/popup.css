@@ -138,6 +138,88 @@ body {
   color: #999;
 }
 
+.input-hint a {
+  color: #667eea;
+  text-decoration: none;
+}
+
+.input-hint a:hover {
+  text-decoration: underline;
+}
+
+/* Settings Toggle Button */
+.settings-toggle {
+  width: 100%;
+  padding: 10px;
+  margin-top: 16px;
+  background: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.settings-toggle:hover {
+  background: #eee;
+  color: #333;
+}
+
+/* Settings Panel */
+.settings-panel {
+  margin-top: 16px;
+  padding: 16px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+/* API Key Status */
+.api-status {
+  font-size: 11px;
+  margin-left: 8px;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.api-status.configured {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.api-status.not-configured {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+/* Save API Key Button */
+.save-api-key-btn {
+  width: 100%;
+  padding: 10px 16px;
+  margin-top: 8px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.save-api-key-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.api-key-status {
+  font-size: 12px;
+  text-align: center;
+  margin-top: 8px;
+  color: #667eea;
+}
+
 /* Saving Indicator */
 .saving-indicator {
   text-align: center;

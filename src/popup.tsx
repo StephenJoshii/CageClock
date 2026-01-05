@@ -8,12 +8,23 @@ function IndexPopup() {
   const [isEnabled, setIsEnabled] = useState(false)
   const [topic, setTopic] = useState("")
   const [isSaving, setIsSaving] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
+  const [apiKey, setApiKey] = useState("")
+  const [hasApiKey, setHasApiKey] = useState(false)
+  const [apiKeyStatus, setApiKeyStatus] = useState("")
 
   useEffect(() => {
     // Load saved settings on mount
     getSettings().then((settings) => {
       setIsEnabled(settings.isEnabled)
       setTopic(settings.focusTopic)
+    })
+    
+    // Check if API key is configured
+    chrome.runtime.sendMessage({ type: "GET_API_KEY" }, (response) => {
+      if (response?.success) {
+        setHasApiKey(response.hasApiKey)
+      }
     })
   }, [])
 
@@ -41,6 +52,27 @@ function IndexPopup() {
       await setFocusTopic(topic)
       setIsSaving(false)
     }
+  }
+
+  const handleSaveApiKey = () => {
+    if (!apiKey.trim()) {
+      setApiKeyStatus("Please enter an API key")
+      return
+    }
+    
+    chrome.runtime.sendMessage(
+      { type: "SET_API_KEY", apiKey: apiKey.trim() },
+      (response) => {
+        if (response?.success) {
+          setApiKeyStatus("✓ API key saved!")
+          setHasApiKey(true)
+          setApiKey("")
+          setTimeout(() => setApiKeyStatus(""), 2000)
+        } else {
+          setApiKeyStatus("Failed to save API key")
+        }
+      }
+    )
   }
 
   return (
@@ -86,6 +118,47 @@ function IndexPopup() {
         </div>
 
         {isSaving && <div className="saving-indicator">Saving...</div>}
+        
+        {/* Settings Toggle */}
+        <button 
+          className="settings-toggle"
+          onClick={() => setShowSettings(!showSettings)}
+        >
+          ⚙️ {showSettings ? "Hide Settings" : "API Settings"}
+        </button>
+        
+        {/* API Key Settings Panel */}
+        {showSettings && (
+          <div className="settings-panel">
+            <div className="setting-row vertical">
+              <label className="setting-label" htmlFor="api-key">
+                YouTube API Key
+                {hasApiKey && <span className="api-status configured">✓ Configured</span>}
+                {!hasApiKey && <span className="api-status not-configured">Not set</span>}
+              </label>
+              <input
+                id="api-key"
+                type="password"
+                className="topic-input"
+                placeholder="Enter your YouTube API key..."
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+              />
+              <button 
+                className="save-api-key-btn"
+                onClick={handleSaveApiKey}
+              >
+                Save API Key
+              </button>
+              {apiKeyStatus && (
+                <p className="api-key-status">{apiKeyStatus}</p>
+              )}
+              <p className="input-hint">
+                Get a key from <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer">Google Cloud Console</a>
+              </p>
+            </div>
+          </div>
+        )}
       </main>
 
       <footer className="popup-footer">

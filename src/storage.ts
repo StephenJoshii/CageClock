@@ -7,7 +7,11 @@ export interface FocusSettings {
 
 export const STORAGE_KEYS = {
   IS_ENABLED: "isEnabled",
-  FOCUS_TOPIC: "focusTopic"
+  FOCUS_TOPIC: "focusTopic",
+  YOUTUBE_API_KEY: "youtubeApiKey",
+  CACHED_VIDEOS: "cachedVideos",
+  CACHED_VIDEOS_TOPIC: "cachedVideosTopic",
+  CACHED_VIDEOS_TIME: "cachedVideosTime"
 } as const
 
 const storage = new Storage({ area: "local" })
