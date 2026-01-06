@@ -254,7 +254,9 @@ async function initializeSettings() {
 const CACHED_VIDEOS_KEY = "cachedVideos"
 const CACHED_VIDEOS_TOPIC_KEY = "cachedVideosTopic"
 const CACHED_VIDEOS_TIME_KEY = "cachedVideosTime"
+const CACHED_VERSION_KEY = "cacheVersion"
 const CACHE_DURATION_MS = 30 * 60 * 1000 // 30 minutes
+const CURRENT_CACHE_VERSION = 2 // Increment this when filter logic changes
 
 /**
  * Fetch and cache videos for the current focus topic
@@ -267,6 +269,7 @@ async function fetchAndCacheVideos(forceFresh: boolean = false): Promise<FetchVi
       CACHED_VIDEOS_KEY,
       CACHED_VIDEOS_TOPIC_KEY,
       CACHED_VIDEOS_TIME_KEY,
+      CACHED_VERSION_KEY,
       "cachedNextPageToken"
     ])
     
@@ -274,10 +277,12 @@ async function fetchAndCacheVideos(forceFresh: boolean = false): Promise<FetchVi
     const cachedVideos = result[CACHED_VIDEOS_KEY]
     const cachedTopic = result[CACHED_VIDEOS_TOPIC_KEY]
     const cachedTime = result[CACHED_VIDEOS_TIME_KEY]
+    const cachedVersion = result[CACHED_VERSION_KEY]
     const cachedNextPageToken = result["cachedNextPageToken"]
     
-    // Check if we have valid cached videos
-    if (!forceFresh && cachedVideos && cachedTopic === currentTopic) {
+    // Check if we have valid cached videos (matching topic, version, and not expired)
+    const isVersionMatch = cachedVersion === CURRENT_CACHE_VERSION
+    if (!forceFresh && cachedVideos && cachedTopic === currentTopic && isVersionMatch) {
       const age = Date.now() - (cachedTime || 0)
       if (age < CACHE_DURATION_MS) {
         console.log(`[CageClock] Using cached videos (${Math.round(age / 1000)}s old)`)
@@ -285,15 +290,19 @@ async function fetchAndCacheVideos(forceFresh: boolean = false): Promise<FetchVi
       }
     }
     
-    // Fetch fresh videos
+    // Fetch fresh videos (cache invalid due to version mismatch, topic change, or expiry)
+    if (!isVersionMatch) {
+      console.log(`[CageClock] Cache version mismatch (${cachedVersion} vs ${CURRENT_CACHE_VERSION}), fetching fresh`)
+    }
     console.log(`[CageClock] Fetching fresh videos for topic: "${currentTopic}"`)
     const fetchResult = await fetchVideosForTopic(currentTopic, 24)
     
-    // Cache the results
+    // Cache the results with version
     await chrome.storage.local.set({
       [CACHED_VIDEOS_KEY]: fetchResult.videos,
       [CACHED_VIDEOS_TOPIC_KEY]: currentTopic,
       [CACHED_VIDEOS_TIME_KEY]: Date.now(),
+      [CACHED_VERSION_KEY]: CURRENT_CACHE_VERSION,
       "cachedNextPageToken": fetchResult.nextPageToken
     })
     
@@ -319,7 +328,9 @@ async function clearVideoCache(): Promise<void> {
   await chrome.storage.local.remove([
     CACHED_VIDEOS_KEY,
     CACHED_VIDEOS_TOPIC_KEY,
-    CACHED_VIDEOS_TIME_KEY
+    CACHED_VIDEOS_TIME_KEY,
+    CACHED_VERSION_KEY,
+    "cachedNextPageToken"
   ])
   console.log("[CageClock] Video cache cleared")
 }

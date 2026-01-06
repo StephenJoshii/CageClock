@@ -278,20 +278,28 @@ function YouTubeContentScript() {
     }
   }, [])
 
-  // Handle CSS injection for hiding native content
+  // Handle CSS injection for hiding native content AND host visibility
   useEffect(() => {
     console.log("[CageClock] isEnabled:", isEnabled, "isHomePage:", isHomePage)
+    
+    // Get the shadow host element
+    const shadowHost = document.getElementById("cageclock-feed-host")
     
     if (isEnabled && isHomePage) {
       const css = generateHideCSS(true)
       injectCSS(css)
+      // Add active class to make overlay visible
+      shadowHost?.classList.add("cageclock-active")
       console.log("[CageClock] Focus mode enabled - hiding distractions")
     } else {
       removeCSS()
+      // Remove active class to hide overlay
+      shadowHost?.classList.remove("cageclock-active")
     }
 
     return () => {
       removeCSS()
+      shadowHost?.classList.remove("cageclock-active")
     }
   }, [isEnabled, isHomePage])
 

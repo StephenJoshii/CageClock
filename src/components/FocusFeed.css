@@ -49,14 +49,19 @@ html:not([dark]) :host,
 
 /* ===== FEED CONTAINER ===== */
 /*
- * Plasmo overlay approach: The shadow host is positioned absolutely
- * over the YouTube content area. We use fixed positioning to ensure
- * stability during scroll and prevent remounting issues.
+ * Plasmo overlay approach: The shadow host styles are minimal by default.
+ * The actual positioning is done via .cageclock-overlay-active class
+ * which is only added when focus mode is active.
  */
 
-/* Plasmo's overlay container - position over YouTube's content */
+/* Plasmo's overlay container - invisible by default */
 :host {
-  display: block !important;
+  display: block;
+  pointer-events: none;
+}
+
+/* When the overlay is active (has content), apply full positioning */
+:host(.cageclock-active) {
   position: fixed !important;
   top: var(--ytd-masthead-height, 56px) !important;
   left: var(--ytd-guide-width, 240px) !important;
@@ -67,17 +72,18 @@ html:not([dark]) :host,
   z-index: 100 !important;
   overflow-y: auto !important;
   overflow-x: hidden !important;
+  pointer-events: auto;
 }
 
 /* When guide is collapsed */
-ytd-app[guide-persistent-and-visible] ~ #cageclock-feed-host,
-:host-context(ytd-app[guide-persistent-and-visible]) {
+ytd-app[guide-persistent-and-visible] ~ #cageclock-feed-host.cageclock-active,
+:host-context(ytd-app[guide-persistent-and-visible]):host(.cageclock-active) {
   left: var(--ytd-guide-width, 240px) !important;
 }
 
 /* When mini-guide is shown (collapsed sidebar) */
-ytd-app:not([guide-persistent-and-visible]) ~ #cageclock-feed-host,
-:host-context(ytd-app:not([guide-persistent-and-visible])) {
+ytd-app:not([guide-persistent-and-visible]) ~ #cageclock-feed-host.cageclock-active,
+:host-context(ytd-app:not([guide-persistent-and-visible])):host(.cageclock-active) {
   left: 72px !important;
 }
 

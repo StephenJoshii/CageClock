@@ -15,6 +15,7 @@ export interface YouTubeVideo {
   description: string
   duration: string // ISO 8601 duration (e.g., "PT4M13S")
   viewCount: string
+  categoryId?: string // YouTube category ID (10 = Music)
 }
 
 // Result with pagination support
@@ -70,6 +71,9 @@ interface YouTubeVideoDetailsItem {
     viewCount: string
     likeCount?: string
     commentCount?: string
+  }
+  snippet?: {
+    categoryId: string
   }
 }
 
@@ -249,11 +253,12 @@ export async function fetchVideosForTopic(
     ])
 
     // Create maps for quick lookup
-    const videoDetailsMap = new Map<string, { duration: string; viewCount: string }>()
+    const videoDetailsMap = new Map<string, { duration: string; viewCount: string; categoryId: string }>()
     videoDetailsResponse.items.forEach((item) => {
       videoDetailsMap.set(item.id, {
         duration: item.contentDetails.duration,
-        viewCount: item.statistics.viewCount
+        viewCount: item.statistics.viewCount,
+        categoryId: item.snippet?.categoryId || ""
       })
     })
 
@@ -263,8 +268,8 @@ export async function fetchVideosForTopic(
     })
 
     // Map the results with all details
-    const videos: YouTubeVideo[] = validItems.map((item) => {
-      const details = videoDetailsMap.get(item.id.videoId!) || { duration: "PT0S", viewCount: "0" }
+    const allVideos: YouTubeVideo[] = validItems.map((item) => {
+      const details = videoDetailsMap.get(item.id.videoId!) || { duration: "PT0S", viewCount: "0", categoryId: "" }
       return {
         videoId: item.id.videoId!,
         title: decodeHTMLEntities(item.snippet.title),
@@ -275,11 +280,44 @@ export async function fetchVideosForTopic(
         publishedAt: item.snippet.publishedAt,
         description: decodeHTMLEntities(item.snippet.description),
         duration: details.duration,
-        viewCount: details.viewCount
+        viewCount: details.viewCount,
+        categoryId: details.categoryId
       }
     })
 
-    console.log(`[YouTube API] Found ${videos.length} videos for topic: "${topic}"`)
+    // Filter out Shorts (< 60 seconds) and Music videos (categoryId = 10)
+    const videos = allVideos.filter((video) => {
+      // Parse duration to check for Shorts
+      const durationSeconds = parseDurationToSeconds(video.duration)
+      const isShort = durationSeconds > 0 && durationSeconds < 60
+      
+      // Check if it's a music video (categoryId 10 = Music)
+      const isMusic = video.categoryId === "10"
+      
+      // Also filter by title patterns that indicate music/songs
+      const titleLower = video.title.toLowerCase()
+      const isSongByTitle = (
+        titleLower.includes("official music video") ||
+        titleLower.includes("official video") ||
+        titleLower.includes("official audio") ||
+        titleLower.includes("lyric video") ||
+        titleLower.includes("lyrics video") ||
+        titleLower.includes("music video") ||
+        (titleLower.includes("ft.") && titleLower.includes("official")) ||
+        (titleLower.includes("feat.") && titleLower.includes("official"))
+      )
+      
+      if (isShort) {
+        console.log(`[YouTube API] Filtered out Short: "${video.title}" (${durationSeconds}s)`)
+      }
+      if (isMusic || isSongByTitle) {
+        console.log(`[YouTube API] Filtered out Music: "${video.title}" (category: ${video.categoryId})`)
+      }
+      
+      return !isShort && !isMusic && !isSongByTitle
+    })
+
+    console.log(`[YouTube API] Found ${allVideos.length} videos, ${videos.length} after filtering for topic: "${topic}"`)
     return {
       videos,
       nextPageToken: searchResponse.nextPageToken,
@@ -315,10 +353,10 @@ export async function fetchVideosForTopic(
 }
 
 /**
- * Fetch video details (duration, view count) for multiple videos
+ * Fetch video details (duration, view count, category) for multiple videos
  */
 async function fetchVideoDetails(videoIds: string, apiKey: string): Promise<YouTubeVideoDetailsResponse> {
-  const url = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails,statistics&id=${videoIds}&key=${apiKey}`
+  const url = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails,statistics,snippet&id=${videoIds}&key=${apiKey}`
   
   try {
     const response = await fetch(url)
@@ -364,6 +402,20 @@ async function fetchChannelAvatars(channelIds: string, apiKey: string): Promise<
 function getBestThumbnail(thumbnails: YouTubeSearchItem["snippet"]["thumbnails"]): string {
   // Prefer high quality, fall back to medium, then default
   return thumbnails.high?.url || thumbnails.medium?.url || thumbnails.default?.url || ""
+}
+
+/**
+ * Parse ISO 8601 duration (PT4M13S) to seconds
+ */
+function parseDurationToSeconds(isoDuration: string): number {
+  const match = isoDuration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/)
+  if (!match) return 0
+
+  const hours = parseInt(match[1] || "0", 10)
+  const minutes = parseInt(match[2] || "0", 10)
+  const seconds = parseInt(match[3] || "0", 10)
+
+  return hours * 3600 + minutes * 60 + seconds
 }
 
 /**
