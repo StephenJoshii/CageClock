@@ -212,23 +212,17 @@ export function FocusFeed({
         </div>
       )}
 
-      {/* Header */}
-      <div className="cageclock-feed-header">
-        <div className="cageclock-feed-title">
-          <span className="cageclock-feed-icon">🎯</span>
-          <h2>
-            Focus Mode: <span className="cageclock-topic-highlight">{topic}</span>
-          </h2>
+      {/* Category Chips Bar - YouTube Native Style */}
+      <div className="cageclock-chips-bar">
+        <div className="cageclock-chip cageclock-chip-active">
+          {topic}
         </div>
-        <p className="cageclock-feed-subtitle">
-          Curated videos to help you stay focused on your learning goal
-        </p>
         <button
-          className="cageclock-refresh-btn"
+          className="cageclock-chip cageclock-chip-refresh"
           onClick={onRefresh}
           disabled={isLoading}
         >
-          {isLoading ? "Loading..." : "🔄 Refresh"}
+          {isLoading ? "↻" : "↻"}
         </button>
       </div>
 
