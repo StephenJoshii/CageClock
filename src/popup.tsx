@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react"
 
-import { getSettings, setEnabled, setFocusTopic } from "./storage"
-import { STORAGE_KEYS } from "./storage"
+import {
+  getSettings,
+  setEnabled,
+  setFocusTopic,
+  getStatistics
+} from "./storage"
+import { STORAGE_KEYS, MESSAGES } from "./constants"
 
 import "./popup.css"
 
@@ -15,7 +20,7 @@ function IndexPopup() {
   const [hasApiKey, setHasApiKey] = useState(false)
   const [apiKeyStatus, setApiKeyStatus] = useState("")
   const [videosFiltered, setVideosFiltered] = useState(0)
-  
+
   // Break mode state
   const [isOnBreak, setIsOnBreak] = useState(false)
   const [breakEndTime, setBreakEndTime] = useState<number | null>(null)
@@ -27,31 +32,32 @@ function IndexPopup() {
       setIsEnabled(settings.isEnabled)
       // Parse topics from comma-separated string
       if (settings.focusTopic) {
-        const savedTopics = settings.focusTopic.split(",").map(t => t.trim()).filter(t => t)
+        const savedTopics = settings.focusTopic
+          .split(",")
+          .map((t) => t.trim())
+          .filter((t) => t)
         setTopics(savedTopics)
       }
     })
-    
+
     // Check if API key is configured
     chrome.runtime.sendMessage({ type: "GET_API_KEY" }, (response) => {
       if (response?.success) {
         setHasApiKey(response.hasApiKey)
       }
     })
-    
-    // Load videos filtered count
-    chrome.storage.local.get([STORAGE_KEYS.VIDEOS_FILTERED_TODAY || "videosFilteredToday"], (result) => {
-      setVideosFiltered(result.videosFilteredToday || 0)
-    })
-    
+
+    // Load statistics
+    loadStatistics()
+
     // Check break status
     checkBreakStatus()
   }, [])
-  
+
   // Update countdown timer
   useEffect(() => {
     if (!isOnBreak || !breakEndTime) return
-    
+
     const updateTimer = () => {
       const remaining = Math.max(0, breakEndTime - Date.now())
       if (remaining === 0) {
@@ -64,17 +70,17 @@ function IndexPopup() {
         })
         return
       }
-      
+
       const minutes = Math.floor(remaining / 60000)
       const seconds = Math.floor((remaining % 60000) / 1000)
       setRemainingTime(`${minutes}:${seconds.toString().padStart(2, "0")}`)
     }
-    
+
     updateTimer()
     const interval = setInterval(updateTimer, 1000)
     return () => clearInterval(interval)
   }, [isOnBreak, breakEndTime])
-  
+
   const checkBreakStatus = () => {
     chrome.runtime.sendMessage({ type: "GET_BREAK_STATUS" }, (response) => {
       if (response?.success) {
@@ -82,6 +88,11 @@ function IndexPopup() {
         setBreakEndTime(response.endTime)
       }
     })
+  }
+
+  const loadStatistics = async () => {
+    const stats = await getStatistics()
+    setVideosFiltered(stats.videosFiltered)
   }
 
   const handleToggle = async () => {
@@ -96,7 +107,9 @@ function IndexPopup() {
     setInputValue(e.target.value)
   }
 
-  const handleInputKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleInputKeyDown = async (
+    e: React.KeyboardEvent<HTMLInputElement>
+  ) => {
     if (e.key === "Enter" && inputValue.trim()) {
       e.preventDefault()
       const newTopic = inputValue.trim()
@@ -110,7 +123,11 @@ function IndexPopup() {
       } else {
         setInputValue("")
       }
-    } else if (e.key === "Backspace" && inputValue === "" && topics.length > 0) {
+    } else if (
+      e.key === "Backspace" &&
+      inputValue === "" &&
+      topics.length > 0
+    ) {
       // Remove last chip on backspace if input is empty
       const newTopics = topics.slice(0, -1)
       setTopics(newTopics)
@@ -121,7 +138,7 @@ function IndexPopup() {
   }
 
   const removeChip = async (topicToRemove: string) => {
-    const newTopics = topics.filter(t => t !== topicToRemove)
+    const newTopics = topics.filter((t) => t !== topicToRemove)
     setTopics(newTopics)
     setIsSaving(true)
     await setFocusTopic(newTopics.join(", "))
@@ -133,7 +150,7 @@ function IndexPopup() {
       setApiKeyStatus("Please enter an API key")
       return
     }
-    
+
     chrome.runtime.sendMessage(
       { type: "SET_API_KEY", apiKey: apiKey.trim() },
       (response) => {
@@ -148,7 +165,7 @@ function IndexPopup() {
       }
     )
   }
-  
+
   const handleStartBreak = () => {
     chrome.runtime.sendMessage({ type: "START_BREAK" }, (response) => {
       if (response?.success) {
@@ -158,7 +175,7 @@ function IndexPopup() {
       }
     })
   }
-  
+
   const handleEndBreak = () => {
     chrome.runtime.sendMessage({ type: "END_BREAK" }, (response) => {
       if (response?.success) {
@@ -199,7 +216,9 @@ function IndexPopup() {
             className={`material-toggle ${isEnabled ? "active" : ""}`}
             onClick={handleToggle}
             aria-pressed={isEnabled}
-            aria-label={isEnabled ? "Turn off focus mode" : "Turn on focus mode"}>
+            aria-label={
+              isEnabled ? "Turn off focus mode" : "Turn on focus mode"
+            }>
             <span className="material-toggle-track"></span>
             <span className="material-toggle-thumb"></span>
           </button>
@@ -207,18 +226,15 @@ function IndexPopup() {
 
         {/* Topic Chips System */}
         <div className="setting-row vertical">
-          <label className="setting-label">
-            Focus Topics
-          </label>
+          <label className="setting-label">Focus Topics</label>
           <div className="chips-container">
             {topics.map((t, index) => (
               <span key={index} className="topic-chip">
                 {t}
-                <button 
-                  className="chip-remove" 
+                <button
+                  className="chip-remove"
                   onClick={() => removeChip(t)}
-                  aria-label={`Remove ${t}`}
-                >
+                  aria-label={`Remove ${t}`}>
                   x
                 </button>
               </span>
@@ -226,19 +242,21 @@ function IndexPopup() {
             <input
               type="text"
               className="chip-input"
-              placeholder={topics.length === 0 ? "Type a topic and press Enter..." : "Add more..."}
+              placeholder={
+                topics.length === 0
+                  ? "Type a topic and press Enter..."
+                  : "Add more..."
+              }
               value={inputValue}
               onChange={handleInputChange}
               onKeyDown={handleInputKeyDown}
             />
           </div>
-          <p className="input-hint">
-            Press Enter to add a topic chip
-          </p>
+          <p className="input-hint">Press Enter to add a topic chip</p>
         </div>
 
         {isSaving && <div className="saving-indicator">Saving...</div>}
-        
+
         {/* Emergency Exit / Break Mode */}
         {isOnBreak ? (
           <div className="break-panel">
@@ -247,39 +265,40 @@ function IndexPopup() {
               <span className="break-title">Break Mode Active</span>
             </div>
             <div className="break-timer">{remainingTime}</div>
-            <p className="break-message">Take a breather! Focus mode will resume automatically.</p>
-            <button 
-              className="end-break-btn"
-              onClick={handleEndBreak}
-            >
+            <p className="break-message">
+              Take a breather! Focus mode will resume automatically.
+            </p>
+            <button className="end-break-btn" onClick={handleEndBreak}>
               End Break Early
             </button>
           </div>
-        ) : isEnabled && (
-          <button 
-            className="emergency-exit-btn"
-            onClick={handleStartBreak}
-          >
-            Emergency Exit (10 min break)
-          </button>
+        ) : (
+          isEnabled && (
+            <button className="emergency-exit-btn" onClick={handleStartBreak}>
+              Emergency Exit (10 min break)
+            </button>
+          )
         )}
-        
+
         {/* Settings Toggle */}
-        <button 
+        <button
           className="settings-toggle"
-          onClick={() => setShowSettings(!showSettings)}
-        >
-           {showSettings ? "Hide Settings" : "API Settings"}
+          onClick={() => setShowSettings(!showSettings)}>
+          {showSettings ? "Hide Settings" : "API Settings"}
         </button>
-        
+
         {/* API Key Settings Panel */}
         {showSettings && (
           <div className="settings-panel">
             <div className="setting-row vertical">
               <label className="setting-label" htmlFor="api-key">
                 YouTube API Key
-                {hasApiKey && <span className="api-status configured">✓ Configured</span>}
-                {!hasApiKey && <span className="api-status not-configured">Not set</span>}
+                {hasApiKey && (
+                  <span className="api-status configured">✓ Configured</span>
+                )}
+                {!hasApiKey && (
+                  <span className="api-status not-configured">Not set</span>
+                )}
               </label>
               <input
                 id="api-key"
@@ -289,17 +308,18 @@ function IndexPopup() {
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
               />
-              <button 
-                className="save-api-key-btn"
-                onClick={handleSaveApiKey}
-              >
+              <button className="save-api-key-btn" onClick={handleSaveApiKey}>
                 Save API Key
               </button>
-              {apiKeyStatus && (
-                <p className="api-key-status">{apiKeyStatus}</p>
-              )}
+              {apiKeyStatus && <p className="api-key-status">{apiKeyStatus}</p>}
               <p className="input-hint">
-                Get a key from <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer">Google Cloud Console</a>
+                Get a key from{" "}
+                <a
+                  href="https://console.cloud.google.com/apis/credentials"
+                  target="_blank"
+                  rel="noopener noreferrer">
+                  Google Cloud Console
+                </a>
               </p>
             </div>
           </div>
@@ -312,7 +332,7 @@ function IndexPopup() {
           <span className="stats-label">Videos Filtered Today</span>
           <span className="stats-value">{videosFiltered}</span>
         </div>
-        
+
         <p className="status">
           Status:{" "}
           <span className={isEnabled ? "status-active" : "status-inactive"}>

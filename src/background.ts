@@ -1,6 +1,7 @@
-import { STORAGE_KEYS, type FocusSettings } from "./storage"
-import { 
-  fetchVideosForTopic, 
+import { type FocusSettings, incrementVideosFiltered } from "./storage"
+import { STORAGE_KEYS, CONFIG } from "./constants"
+import {
+  fetchVideosForTopic,
   fetchVideosFromStorage,
   type YouTubeVideo,
   type FetchVideosResult,
@@ -16,10 +17,8 @@ console.log("CageClock background service worker started")
 
 // ===== ALGORITHM NUDGE ALARM =====
 const ALGORITHM_NUDGE_ALARM = "algorithmNudge"
-const NUDGE_INTERVAL_MINUTES = 30
 
 // ===== BREAK MODE CONSTANTS =====
-const BREAK_DURATION_MS = 10 * 60 * 1000 // 10 minutes
 const BREAK_CHECK_ALARM = "breakCheck"
 
 // Listen for changes in chrome.storage.local
@@ -32,7 +31,7 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
   if (STORAGE_KEYS.IS_ENABLED in changes) {
     const { oldValue, newValue } = changes[STORAGE_KEYS.IS_ENABLED]
     console.log(`Focus mode changed: ${oldValue} → ${newValue}`)
-    
+
     if (newValue === true) {
       onFocusModeEnabled()
     } else {
@@ -46,7 +45,7 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
     console.log(`Focus topic changed: "${oldValue}" → "${newValue}"`)
     onFocusTopicChanged(newValue)
   }
-  
+
   // Check if break mode changed
   if (STORAGE_KEYS.BREAK_MODE in changes) {
     if (changes[STORAGE_KEYS.BREAK_MODE].newValue === true) {
@@ -58,15 +57,15 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
 // Handler when focus mode is enabled
 function onFocusModeEnabled() {
   console.log("🎯 Focus mode ENABLED")
-  
+
   // Start the Algorithm Nudge alarm
   startAlgorithmNudge()
-  
+
   // Get current focus topic
   chrome.storage.local.get([STORAGE_KEYS.FOCUS_TOPIC], (result) => {
     const topic = result[STORAGE_KEYS.FOCUS_TOPIC] || "your goal"
     console.log(`Now focusing on: ${topic}`)
-    
+
     // Perform initial nudge
     performAlgorithmNudge(topic)
   })
@@ -75,7 +74,7 @@ function onFocusModeEnabled() {
 // Handler when focus mode is disabled
 function onFocusModeDisabled() {
   console.log("💤 Focus mode DISABLED")
-  
+
   // Stop the Algorithm Nudge alarm
   stopAlgorithmNudge()
 }
@@ -98,10 +97,12 @@ function onFocusTopicChanged(newTopic: string) {
  */
 function startAlgorithmNudge() {
   chrome.alarms.create(ALGORITHM_NUDGE_ALARM, {
-    delayInMinutes: NUDGE_INTERVAL_MINUTES,
-    periodInMinutes: NUDGE_INTERVAL_MINUTES
+    delayInMinutes: CONFIG.NUDGE_INTERVAL_MINUTES,
+    periodInMinutes: CONFIG.NUDGE_INTERVAL_MINUTES
   })
-  console.log(`[AlgorithmNudge] Started - will nudge every ${NUDGE_INTERVAL_MINUTES} minutes`)
+  console.log(
+    `[AlgorithmNudge] Started - will nudge every ${CONFIG.NUDGE_INTERVAL_MINUTES} minutes`
+  )
 }
 
 /**
@@ -121,19 +122,20 @@ async function performAlgorithmNudge(topic: string) {
     console.log("[AlgorithmNudge] No topic set, skipping")
     return
   }
-  
+
   console.log(`[AlgorithmNudge] Nudging algorithm with topic: "${topic}"`)
-  
+
   try {
     // Fetch videos for the topic (this triggers a YouTube API search)
     // The API call itself helps signal interest to YouTube
     const result = await fetchVideosForTopic(topic, 5)
-    console.log(`[AlgorithmNudge] Found ${result.videos.length} videos for "${topic}"`)
-    
+    console.log(
+      `[AlgorithmNudge] Found ${result.videos.length} videos for "${topic}"`
+    )
+
     // Optionally: Open a video in the background to strengthen the signal
     // This is more aggressive but more effective
     // We'll just do the search for now
-    
   } catch (error) {
     console.error("[AlgorithmNudge] Error:", error)
   }
@@ -146,10 +148,10 @@ async function performAlgorithmNudge(topic: string) {
  */
 function onBreakModeEnabled() {
   console.log("☕ Break mode ENABLED - 10 minute break started")
-  
+
   // Set up alarm to end break
   chrome.alarms.create(BREAK_CHECK_ALARM, {
-    delayInMinutes: 10 // 10 minute break
+    delayInMinutes: CONFIG.BREAK_DURATION_MS / (60 * 1000)
   })
 }
 
@@ -158,13 +160,13 @@ function onBreakModeEnabled() {
  */
 async function endBreakMode() {
   console.log("☕ Break mode ENDED - resuming focus")
-  
+
   await chrome.storage.local.set({
     [STORAGE_KEYS.BREAK_MODE]: false,
     [STORAGE_KEYS.BREAK_END_TIME]: null,
     [STORAGE_KEYS.IS_ENABLED]: true
   })
-  
+
   // Notify any open YouTube tabs
   const tabs = await chrome.tabs.query({ url: "*://*.youtube.com/*" })
   for (const tab of tabs) {
@@ -177,37 +179,45 @@ async function endBreakMode() {
 /**
  * Start emergency break mode
  */
-async function startBreakMode(): Promise<{ success: boolean; endTime: number }> {
-  const endTime = Date.now() + BREAK_DURATION_MS
-  
+async function startBreakMode(): Promise<{
+  success: boolean
+  endTime: number
+}> {
+  const endTime = Date.now() + CONFIG.BREAK_DURATION_MS
+
   await chrome.storage.local.set({
     [STORAGE_KEYS.BREAK_MODE]: true,
     [STORAGE_KEYS.BREAK_END_TIME]: endTime,
     [STORAGE_KEYS.IS_ENABLED]: false // Disable focus mode during break
   })
-  
+
   // Set alarm to end break
   chrome.alarms.create(BREAK_CHECK_ALARM, {
     when: endTime
   })
-  
-  console.log(`☕ Break started, ends at ${new Date(endTime).toLocaleTimeString()}`)
-  
+
+  console.log(
+    `☕ Break started, ends at ${new Date(endTime).toLocaleTimeString()}`
+  )
+
   return { success: true, endTime }
 }
 
 // ===== ALARM LISTENER =====
 chrome.alarms.onAlarm.addListener(async (alarm) => {
   console.log(`[Alarm] Fired: ${alarm.name}`)
-  
+
   if (alarm.name === ALGORITHM_NUDGE_ALARM) {
     // Check if focus mode is still enabled
-    const result = await chrome.storage.local.get([STORAGE_KEYS.IS_ENABLED, STORAGE_KEYS.FOCUS_TOPIC])
+    const result = await chrome.storage.local.get([
+      STORAGE_KEYS.IS_ENABLED,
+      STORAGE_KEYS.FOCUS_TOPIC
+    ])
     if (result[STORAGE_KEYS.IS_ENABLED] && result[STORAGE_KEYS.FOCUS_TOPIC]) {
       performAlgorithmNudge(result[STORAGE_KEYS.FOCUS_TOPIC])
     }
   }
-  
+
   if (alarm.name === BREAK_CHECK_ALARM) {
     // Break is over, re-enable focus mode
     endBreakMode()
@@ -222,47 +232,51 @@ async function initializeSettings() {
     STORAGE_KEYS.BREAK_MODE,
     STORAGE_KEYS.BREAK_END_TIME
   ])
-  
+
   // Check if there's an ongoing break
   if (result[STORAGE_KEYS.BREAK_MODE] && result[STORAGE_KEYS.BREAK_END_TIME]) {
     const endTime = result[STORAGE_KEYS.BREAK_END_TIME]
     if (Date.now() < endTime) {
       // Break is still active, set alarm for remaining time
       chrome.alarms.create(BREAK_CHECK_ALARM, { when: endTime })
-      console.log(`☕ Break in progress, ends at ${new Date(endTime).toLocaleTimeString()}`)
+      console.log(
+        `☕ Break in progress, ends at ${new Date(endTime).toLocaleTimeString()}`
+      )
     } else {
       // Break has expired, end it
       endBreakMode()
     }
   }
-  
+
   const settings: FocusSettings = {
     isEnabled: result[STORAGE_KEYS.IS_ENABLED] ?? false,
     focusTopic: result[STORAGE_KEYS.FOCUS_TOPIC] ?? ""
   }
-  
+
   console.log("Current settings:", settings)
-  
+
   if (settings.isEnabled) {
-    console.log(`🎯 Focus mode is active, focusing on: ${settings.focusTopic || "not set"}`)
+    console.log(
+      `🎯 Focus mode is active, focusing on: ${settings.focusTopic || "not set"}`
+    )
     // Restart the nudge alarm if focus mode was already on
     startAlgorithmNudge()
   }
 }
 
-// Storage key for cached videos
+// Storage key for cached videos (deprecated, using CONFIG.STORAGE_KEYS now)
 const CACHED_VIDEOS_KEY = "cachedVideos"
 const CACHED_VIDEOS_TOPIC_KEY = "cachedVideosTopic"
 const CACHED_VIDEOS_TIME_KEY = "cachedVideosTime"
 const CACHED_VERSION_KEY = "cacheVersion"
-const CACHE_DURATION_MS = 30 * 60 * 1000 // 30 minutes
-const CURRENT_CACHE_VERSION = 2 // Increment this when filter logic changes
 
 /**
  * Fetch and cache videos for the current focus topic
  * Returns cached videos if available and not expired
  */
-async function fetchAndCacheVideos(forceFresh: boolean = false): Promise<FetchVideosResult> {
+async function fetchAndCacheVideos(
+  forceFresh: boolean = false
+): Promise<FetchVideosResult> {
   try {
     const result = await chrome.storage.local.get([
       STORAGE_KEYS.FOCUS_TOPIC,
@@ -272,51 +286,74 @@ async function fetchAndCacheVideos(forceFresh: boolean = false): Promise<FetchVi
       CACHED_VERSION_KEY,
       "cachedNextPageToken"
     ])
-    
+
     const currentTopic = result[STORAGE_KEYS.FOCUS_TOPIC]
     const cachedVideos = result[CACHED_VIDEOS_KEY]
     const cachedTopic = result[CACHED_VIDEOS_TOPIC_KEY]
     const cachedTime = result[CACHED_VIDEOS_TIME_KEY]
     const cachedVersion = result[CACHED_VERSION_KEY]
     const cachedNextPageToken = result["cachedNextPageToken"]
-    
+
     // Check if we have valid cached videos (matching topic, version, and not expired)
-    const isVersionMatch = cachedVersion === CURRENT_CACHE_VERSION
-    if (!forceFresh && cachedVideos && cachedTopic === currentTopic && isVersionMatch) {
+    const isVersionMatch = cachedVersion === CONFIG.CURRENT_CACHE_VERSION
+    if (
+      !forceFresh &&
+      cachedVideos &&
+      cachedTopic === currentTopic &&
+      isVersionMatch
+    ) {
       const age = Date.now() - (cachedTime || 0)
-      if (age < CACHE_DURATION_MS) {
-        console.log(`[CageClock] Using cached videos (${Math.round(age / 1000)}s old)`)
-        return { videos: cachedVideos as YouTubeVideo[], nextPageToken: cachedNextPageToken }
+      if (age < CONFIG.CACHE_DURATION_MS) {
+        console.log(
+          `[CageClock] Using cached videos (${Math.round(age / 1000)}s old)`
+        )
+        return {
+          videos: cachedVideos as YouTubeVideo[],
+          nextPageToken: cachedNextPageToken
+        }
       }
     }
-    
+
     // Fetch fresh videos (cache invalid due to version mismatch, topic change, or expiry)
     if (!isVersionMatch) {
-      console.log(`[CageClock] Cache version mismatch (${cachedVersion} vs ${CURRENT_CACHE_VERSION}), fetching fresh`)
+      console.log(
+        `[CageClock] Cache version mismatch (${cachedVersion} vs ${CONFIG.CURRENT_CACHE_VERSION}), fetching fresh`
+      )
     }
-    console.log(`[CageClock] Fetching fresh videos for topic: "${currentTopic}"`)
-    const fetchResult = await fetchVideosForTopic(currentTopic, 24)
-    
+    console.log(
+      `[CageClock] Fetching fresh videos for topic: "${currentTopic}"`
+    )
+    const fetchResult = await fetchVideosForTopic(
+      currentTopic,
+      CONFIG.MAX_RESULTS_PER_PAGE
+    )
+
     // Cache the results with version
     await chrome.storage.local.set({
       [CACHED_VIDEOS_KEY]: fetchResult.videos,
       [CACHED_VIDEOS_TOPIC_KEY]: currentTopic,
       [CACHED_VIDEOS_TIME_KEY]: Date.now(),
-      [CACHED_VERSION_KEY]: CURRENT_CACHE_VERSION,
-      "cachedNextPageToken": fetchResult.nextPageToken
+      [CACHED_VERSION_KEY]: CONFIG.CURRENT_CACHE_VERSION,
+      cachedNextPageToken: fetchResult.nextPageToken
     })
-    
+
+    // Track statistics - count filtered videos
+    // Note: The API already filters out Shorts and Music, so we don't need to count those here
+    // But we could track how many total results were found vs how many made it through filters
+    console.log(`[CageClock] Cached ${fetchResult.videos.length} videos`)
+
     console.log(`[CageClock] Cached ${fetchResult.videos.length} videos`)
     return fetchResult
-    
   } catch (error) {
     const apiError = error as YouTubeAPIError
     console.error("[CageClock] Failed to fetch videos:", apiError.message)
-    
+
     if (apiError.isQuotaError) {
-      console.error("⚠️ YouTube API quota exceeded! Wait until quota resets (usually midnight PT)")
+      console.error(
+        "⚠️ YouTube API quota exceeded! Wait until quota resets (usually midnight PT)"
+      )
     }
-    
+
     throw error
   }
 }
@@ -338,17 +375,21 @@ async function clearVideoCache(): Promise<void> {
 // Message handling for communication with popup and content scripts
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   console.log("[CageClock] Received message:", message)
-  
+
   switch (message.type) {
     case "FETCH_VIDEOS":
       // Fetch videos for the current focus topic
       fetchAndCacheVideos(message.forceFresh)
         .then((result) => {
-          sendResponse({ success: true, videos: result.videos, nextPageToken: result.nextPageToken })
+          sendResponse({
+            success: true,
+            videos: result.videos,
+            nextPageToken: result.nextPageToken
+          })
         })
         .catch((error: YouTubeAPIError) => {
-          sendResponse({ 
-            success: false, 
+          sendResponse({
+            success: false,
             error: {
               code: error.code,
               message: error.message,
@@ -358,27 +399,34 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           })
         })
       return true // Keep the message channel open for async response
-    
+
     case "FETCH_MORE_VIDEOS":
       // Fetch additional videos with page token
       chrome.storage.local.get([STORAGE_KEYS.FOCUS_TOPIC], async (result) => {
         const topic = result[STORAGE_KEYS.FOCUS_TOPIC]
         if (!topic) {
-          sendResponse({ success: false, error: { message: "No focus topic set" } })
+          sendResponse({
+            success: false,
+            error: { message: "No focus topic set" }
+          })
           return
         }
-        
+
         try {
-          const fetchResult = await fetchVideosForTopic(topic, 24, message.pageToken)
-          sendResponse({ 
-            success: true, 
-            videos: fetchResult.videos, 
-            nextPageToken: fetchResult.nextPageToken 
+          const fetchResult = await fetchVideosForTopic(
+            topic,
+            24,
+            message.pageToken
+          )
+          sendResponse({
+            success: true,
+            videos: fetchResult.videos,
+            nextPageToken: fetchResult.nextPageToken
           })
         } catch (error) {
           const apiError = error as YouTubeAPIError
-          sendResponse({ 
-            success: false, 
+          sendResponse({
+            success: false,
             error: {
               code: apiError.code,
               message: apiError.message,
@@ -389,16 +437,24 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
       })
       return true
-      
+
     case "FETCH_VIDEOS_FOR_TOPIC":
       // Fetch videos for a specific topic (without saving to storage)
-      fetchVideosForTopic(message.topic, message.maxResults || 24, message.pageToken)
+      fetchVideosForTopic(
+        message.topic,
+        message.maxResults || 24,
+        message.pageToken
+      )
         .then((result) => {
-          sendResponse({ success: true, videos: result.videos, nextPageToken: result.nextPageToken })
+          sendResponse({
+            success: true,
+            videos: result.videos,
+            nextPageToken: result.nextPageToken
+          })
         })
         .catch((error: YouTubeAPIError) => {
-          sendResponse({ 
-            success: false, 
+          sendResponse({
+            success: false,
             error: {
               code: error.code,
               message: error.message,
@@ -408,7 +464,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           })
         })
       return true
-      
+
     case "SET_API_KEY":
       // Set the YouTube API key
       setYouTubeAPIKey(message.apiKey)
@@ -419,7 +475,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           sendResponse({ success: false, error: error.message })
         })
       return true
-      
+
     case "GET_API_KEY":
       // Get the current API key (for checking if it's set)
       getYouTubeAPIKey()
@@ -430,7 +486,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           sendResponse({ success: false, error: error.message })
         })
       return true
-      
+
     case "CLEAR_CACHE":
       // Clear the video cache
       clearVideoCache()
@@ -441,7 +497,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           sendResponse({ success: false, error: error.message })
         })
       return true
-      
+
     case "START_BREAK":
       // Start emergency break mode
       startBreakMode()
@@ -452,26 +508,27 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           sendResponse({ success: false, error: error.message })
         })
       return true
-      
+
     case "GET_BREAK_STATUS":
       // Get current break status
-      chrome.storage.local.get([STORAGE_KEYS.BREAK_MODE, STORAGE_KEYS.BREAK_END_TIME])
+      chrome.storage.local
+        .get([STORAGE_KEYS.BREAK_MODE, STORAGE_KEYS.BREAK_END_TIME])
         .then((result) => {
           const isOnBreak = result[STORAGE_KEYS.BREAK_MODE] ?? false
           const endTime = result[STORAGE_KEYS.BREAK_END_TIME] ?? null
           const remainingMs = endTime ? Math.max(0, endTime - Date.now()) : 0
-          sendResponse({ 
-            success: true, 
-            isOnBreak, 
-            endTime, 
-            remainingMs 
+          sendResponse({
+            success: true,
+            isOnBreak,
+            endTime,
+            remainingMs
           })
         })
         .catch((error) => {
           sendResponse({ success: false, error: error.message })
         })
       return true
-      
+
     case "END_BREAK":
       // End break early
       endBreakMode()
@@ -482,7 +539,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           sendResponse({ success: false, error: error.message })
         })
       return true
-      
+
     default:
       console.log("[CageClock] Unknown message type:", message.type)
       return false

@@ -1,24 +1,16 @@
 import { Storage } from "@plasmohq/storage"
+import { STORAGE_KEYS, CONFIG } from "./constants"
 
 export interface FocusSettings {
   isEnabled: boolean
   focusTopic: string
 }
 
-export const STORAGE_KEYS = {
-  IS_ENABLED: "isEnabled",
-  FOCUS_TOPIC: "focusTopic",
-  YOUTUBE_API_KEY: "youtubeApiKey",
-  CACHED_VIDEOS: "cachedVideos",
-  CACHED_VIDEOS_TOPIC: "cachedVideosTopic",
-  CACHED_VIDEOS_TIME: "cachedVideosTime",
-  // Break timer keys
-  BREAK_MODE: "breakMode",
-  BREAK_END_TIME: "breakEndTime",
-  // Stats
-  VIDEOS_FILTERED_TODAY: "videosFilteredToday",
-  LAST_STATS_RESET: "lastStatsReset"
-} as const
+export interface Statistics {
+  videosFiltered: number
+  videosWatched: number
+  timeFocused: number
+}
 
 const storage = new Storage({ area: "local" })
 
@@ -46,3 +38,95 @@ export async function saveSettings(settings: FocusSettings): Promise<void> {
 }
 
 export { storage }
+
+export async function getStatistics(): Promise<Statistics> {
+  const result = await chrome.storage.local.get([
+    STORAGE_KEYS.VIDEOS_FILTERED_TODAY,
+    STORAGE_KEYS.VIDEOS_WATCHED_TODAY,
+    STORAGE_KEYS.TIME_FOCUSED_TODAY
+  ])
+
+  return {
+    videosFiltered: result[STORAGE_KEYS.VIDEOS_FILTERED_TODAY] || 0,
+    videosWatched: result[STORAGE_KEYS.VIDEOS_WATCHED_TODAY] || 0,
+    timeFocused: result[STORAGE_KEYS.TIME_FOCUSED_TODAY] || 0
+  }
+}
+
+export async function incrementVideosFiltered(
+  count: number = 1
+): Promise<void> {
+  await checkAndResetStats()
+
+  const result = await chrome.storage.local.get([
+    STORAGE_KEYS.VIDEOS_FILTERED_TODAY
+  ])
+  const current = result[STORAGE_KEYS.VIDEOS_FILTERED_TODAY] || 0
+  await chrome.storage.local.set({
+    [STORAGE_KEYS.VIDEOS_FILTERED_TODAY]: current + count
+  })
+}
+
+export async function incrementVideosWatched(count: number = 1): Promise<void> {
+  await checkAndResetStats()
+
+  const result = await chrome.storage.local.get([
+    STORAGE_KEYS.VIDEOS_WATCHED_TODAY
+  ])
+  const current = result[STORAGE_KEYS.VIDEOS_WATCHED_TODAY] || 0
+  await chrome.storage.local.set({
+    [STORAGE_KEYS.VIDEOS_WATCHED_TODAY]: current + count
+  })
+}
+
+export async function incrementTimeFocused(
+  milliseconds: number
+): Promise<void> {
+  await checkAndResetStats()
+
+  const result = await chrome.storage.local.get([
+    STORAGE_KEYS.TIME_FOCUSED_TODAY
+  ])
+  const current = result[STORAGE_KEYS.TIME_FOCUSED_TODAY] || 0
+  await chrome.storage.local.set({
+    [STORAGE_KEYS.TIME_FOCUSED_TODAY]: current + milliseconds
+  })
+}
+
+export async function startSession(): Promise<void> {
+  await chrome.storage.local.set({
+    [STORAGE_KEYS.SESSION_START_TIME]: Date.now()
+  })
+}
+
+export async function endSession(): Promise<number> {
+  const result = await chrome.storage.local.get([
+    STORAGE_KEYS.SESSION_START_TIME
+  ])
+  const startTime = result[STORAGE_KEYS.SESSION_START_TIME]
+
+  if (startTime) {
+    const sessionDuration = Date.now() - startTime
+    await incrementTimeFocused(sessionDuration)
+    await chrome.storage.local.set({ [STORAGE_KEYS.SESSION_START_TIME]: null })
+    return sessionDuration
+  }
+
+  return 0
+}
+
+async function checkAndResetStats(): Promise<void> {
+  const result = await chrome.storage.local.get([STORAGE_KEYS.LAST_STATS_RESET])
+  const lastReset = result[STORAGE_KEYS.LAST_STATS_RESET]
+  const now = Date.now()
+  const resetInterval = CONFIG.STATS_RESET_HOURS * 60 * 60 * 1000
+
+  if (!lastReset || now - lastReset > resetInterval) {
+    await chrome.storage.local.set({
+      [STORAGE_KEYS.VIDEOS_FILTERED_TODAY]: 0,
+      [STORAGE_KEYS.VIDEOS_WATCHED_TODAY]: 0,
+      [STORAGE_KEYS.TIME_FOCUSED_TODAY]: 0,
+      [STORAGE_KEYS.LAST_STATS_RESET]: now
+    })
+  }
+}

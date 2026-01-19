@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"
+import React from "react"
 
 import type { YouTubeVideo } from "../youtube-api"
 
@@ -67,10 +67,9 @@ export function VideoCard({ video, index = 0 }: VideoCardProps) {
   const channelUrl = `https://www.youtube.com/channel/${video.channelId}`
 
   return (
-    <div 
+    <div
       className="cageclock-video-card"
-      style={{ '--card-index': index } as React.CSSProperties}
-    >
+      style={{ "--card-index": index } as React.CSSProperties}>
       {/* Thumbnail with duration overlay */}
       <a href={videoUrl} className="cageclock-thumbnail-link">
         <div className="cageclock-thumbnail-container">
@@ -172,7 +171,6 @@ interface FocusFeedProps {
   onRefresh: () => void
   onLoadMore?: () => void
   hasMore?: boolean
-  showRedirectBanner?: boolean
 }
 
 /**
@@ -186,42 +184,20 @@ export function FocusFeed({
   error,
   onRefresh,
   onLoadMore,
-  hasMore = true,
-  showRedirectBanner
+  hasMore = true
 }: FocusFeedProps) {
-  const [showBanner, setShowBanner] = useState(showRedirectBanner)
-
-  // Auto-hide the redirect banner after 5 seconds
-  useEffect(() => {
-    if (showBanner) {
-      const timer = setTimeout(() => setShowBanner(false), 5000)
-      return () => clearTimeout(timer)
-    }
-  }, [showBanner])
-
   // Generate array for skeleton cards
   const skeletonCards = Array.from({ length: 12 }, (_, i) => i)
 
   return (
     <div className="cageclock-focus-feed">
-      {/* Redirect Banner */}
-      {showBanner && (
-        <div className="cageclock-redirect-banner">
-          <span>🚫 Blocked page! Redirected back to your focus zone.</span>
-          <button onClick={() => setShowBanner(false)}>✕</button>
-        </div>
-      )}
-
       {/* Category Chips Bar - YouTube Native Style */}
       <div className="cageclock-chips-bar">
-        <div className="cageclock-chip cageclock-chip-active">
-          {topic}
-        </div>
+        <div className="cageclock-chip cageclock-chip-active">{topic}</div>
         <button
           className="cageclock-chip cageclock-chip-refresh"
           onClick={onRefresh}
-          disabled={isLoading}
-        >
+          disabled={isLoading}>
           {isLoading ? "↻" : "↻"}
         </button>
       </div>
@@ -256,15 +232,14 @@ export function FocusFeed({
               <VideoCard key={video.videoId} video={video} index={index} />
             ))}
           </div>
-          
+
           {/* Load More Button */}
           {hasMore && onLoadMore && (
             <div className="cageclock-load-more-container">
               <button
                 className="cageclock-load-more-btn"
                 onClick={onLoadMore}
-                disabled={isLoadingMore}
-              >
+                disabled={isLoadingMore}>
                 {isLoadingMore ? (
                   <>
                     <span className="cageclock-spinner"></span>
@@ -279,7 +254,7 @@ export function FocusFeed({
               </button>
             </div>
           )}
-          
+
           {/* End of Results */}
           {!hasMore && videos.length > 0 && (
             <div className="cageclock-end-of-results">

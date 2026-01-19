@@ -31,17 +31,20 @@ A Chrome extension that helps you stay focused on a specific topic while browsin
 ### Development Setup
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/StephenJoshii/CageClock.git
    cd CageClock
    ```
 
 2. Install dependencies:
+
    ```bash
    yarn install
    ```
 
 3. Start the development server:
+
    ```bash
    yarn dev
    ```
@@ -70,7 +73,7 @@ The built extension will be in `build/chrome-mv3-prod`.
 
 3. **Enable Focus Mode**: Toggle the switch to ON
 
-4. **Browse YouTube**: 
+4. **Browse YouTube**:
    - The home page will show curated videos for your topic
    - Distracting elements (sidebar, Shorts, recommendations) are hidden
    - Attempting to visit Trending, Gaming, or Shorts will redirect you home
@@ -82,6 +85,7 @@ The built extension will be in `build/chrome-mv3-prod`.
 ### Content Hiding
 
 When focus mode is enabled, CSS is injected to hide:
+
 - Home page video grid
 - Sidebar recommendations on video pages
 - Category chips
@@ -100,6 +104,7 @@ Every 30 minutes, the extension performs a background search for your focus topi
 ### Redirector
 
 Navigation to these paths is blocked when focus mode is active:
+
 - /feed/trending
 - /gaming
 - /feed/explore
@@ -139,17 +144,18 @@ CageClock/
 
 The extension uses chrome.storage.local for persistence:
 
-| Key | Description |
-|-----|-------------|
-| isEnabled | Focus mode on/off state |
-| focusTopic | Current focus topic |
-| youtubeApiKey | YouTube API key |
-| breakMode | Break mode state |
-| breakEndTime | Timestamp when break ends |
+| Key           | Description               |
+| ------------- | ------------------------- |
+| isEnabled     | Focus mode on/off state   |
+| focusTopic    | Current focus topic       |
+| youtubeApiKey | YouTube API key           |
+| breakMode     | Break mode state          |
+| breakEndTime  | Timestamp when break ends |
 
 ### Permissions
 
 The extension requires these permissions:
+
 - storage: Save settings locally
 - alarms: Schedule algorithm nudge and break timer
 - Host permissions for youtube.com and googleapis.com

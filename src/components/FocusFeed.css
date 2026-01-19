@@ -22,7 +22,12 @@
   --yt-card-bg: #272727;
   --yt-thumbnail-bg: #1a1a1a;
   --yt-skeleton-bg: #272727;
-  --yt-skeleton-shimmer: linear-gradient(90deg, #272727 0%, #3f3f3f 50%, #272727 100%);
+  --yt-skeleton-shimmer: linear-gradient(
+    90deg,
+    #272727 0%,
+    #3f3f3f 50%,
+    #272727 100%
+  );
 }
 
 /* Light Mode Detection */
@@ -44,7 +49,12 @@ html:not([dark]) :host,
   --yt-card-bg: #ffffff;
   --yt-thumbnail-bg: #f2f2f2;
   --yt-skeleton-bg: #e5e5e5;
-  --yt-skeleton-shimmer: linear-gradient(90deg, #e5e5e5 0%, #f5f5f5 50%, #e5e5e5 100%);
+  --yt-skeleton-shimmer: linear-gradient(
+    90deg,
+    #e5e5e5 0%,
+    #f5f5f5 50%,
+    #e5e5e5 100%
+  );
 }
 
 /* ===== FEED CONTAINER ===== */
@@ -82,8 +92,11 @@ ytd-app[guide-persistent-and-visible] ~ #cageclock-feed-host.cageclock-active,
 }
 
 /* When mini-guide is shown (collapsed sidebar) */
-ytd-app:not([guide-persistent-and-visible]) ~ #cageclock-feed-host.cageclock-active,
-:host-context(ytd-app:not([guide-persistent-and-visible])):host(.cageclock-active) {
+ytd-app:not([guide-persistent-and-visible])
+  ~ #cageclock-feed-host.cageclock-active,
+:host-context(ytd-app:not([guide-persistent-and-visible])):host(
+  .cageclock-active
+) {
   left: 72px !important;
 }
 
@@ -202,7 +215,9 @@ ytd-app:not([guide-persistent-and-visible]) ~ #cageclock-feed-host.cageclock-act
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Legacy header styles - hidden */
@@ -213,7 +228,7 @@ ytd-app:not([guide-persistent-and-visible]) ~ #cageclock-feed-host.cageclock-act
 /* ===== VIDEO GRID - YouTube Home Page Clone ===== */
 .cageclock-video-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 40px 16px;
   animation: feedFadeSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
@@ -248,16 +263,23 @@ ytd-app:not([guide-persistent-and-visible]) ~ #cageclock-feed-host.cageclock-act
   }
 }
 
-/* Larger screens - fixed columns */
+/* Larger screens - still 3 columns like YouTube */
 @media (min-width: 1200px) {
   .cageclock-video-grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
 @media (min-width: 1600px) {
   .cageclock-video-grid {
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Tablet - 2 columns */
+@media (max-width: 1000px) {
+  .cageclock-video-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
@@ -299,7 +321,9 @@ ytd-app:not([guide-persistent-and-visible]) ~ #cageclock-feed-host.cageclock-act
 }
 
 .cageclock-video-card:hover .cageclock-thumbnail-container {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
 .cageclock-thumbnail {
@@ -589,8 +613,13 @@ ytd-app:not([guide-persistent-and-visible]) ~ #cageclock-feed-host.cageclock-act
 }
 
 @keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(4px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(4px);
+  }
 }
 
 /* Spinner for loading state */
@@ -604,7 +633,9 @@ ytd-app:not([guide-persistent-and-visible]) ~ #cageclock-feed-host.cageclock-act
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* End of Results */
@@ -644,7 +675,12 @@ ytd-app[darker-dark-theme] .cageclock-focus-feed {
   --yt-card-bg: #272727;
   --yt-thumbnail-bg: #1a1a1a;
   --yt-skeleton-bg: #272727;
-  --yt-skeleton-shimmer: linear-gradient(90deg, #272727 0%, #3f3f3f 50%, #272727 100%);
+  --yt-skeleton-shimmer: linear-gradient(
+    90deg,
+    #272727 0%,
+    #3f3f3f 50%,
+    #272727 100%
+  );
 }
 
 /* Light Mode */
@@ -661,5 +697,10 @@ html:not([dark]) .cageclock-focus-feed {
   --yt-card-bg: #ffffff;
   --yt-thumbnail-bg: #f2f2f2;
   --yt-skeleton-bg: #e5e5e5;
-  --yt-skeleton-shimmer: linear-gradient(90deg, #e5e5e5 0%, #f5f5f5 50%, #e5e5e5 100%);
+  --yt-skeleton-shimmer: linear-gradient(
+    90deg,
+    #e5e5e5 0%,
+    #f5f5f5 50%,
+    #e5e5e5 100%
+  );
 }

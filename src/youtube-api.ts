@@ -3,6 +3,9 @@
  * Handles fetching videos based on focus topics
  */
 
+import { CONFIG, MESSAGES } from "./constants"
+import { incrementVideosFiltered } from "./storage"
+
 // Video data structure returned by our API
 export interface YouTubeVideo {
   videoId: string
@@ -151,8 +154,9 @@ function isAuthError(error: any): boolean {
  */
 function parseAPIError(error: any, statusCode?: number): YouTubeAPIError {
   const code = error?.code || statusCode || 500
-  const message = error?.message || error?.error?.message || "Unknown error occurred"
-  
+  const message =
+    error?.message || error?.error?.message || "Unknown error occurred"
+
   return {
     code,
     message,
@@ -165,7 +169,7 @@ function parseAPIError(error: any, statusCode?: number): YouTubeAPIError {
 /**
  * Fetch top videos for a given topic using YouTube Data API v3
  * Supports pagination with nextPageToken
- * 
+ *
  * @param topic - The search query/focus topic
  * @param maxResults - Maximum number of videos to return (default: 24)
  * @param pageToken - Optional page token for pagination
@@ -180,7 +184,8 @@ export async function fetchVideosForTopic(
   if (!topic || topic.trim().length === 0) {
     throw {
       code: 400,
-      message: "Focus topic is empty. Please set a topic first.",
+      message:
+        MESSAGES.NO_TOPIC || "Focus topic is empty. Please set a topic first.",
       isQuotaError: false,
       isAuthError: false,
       isNetworkError: false
@@ -192,7 +197,7 @@ export async function fetchVideosForTopic(
   if (!apiKey) {
     throw {
       code: 401,
-      message: "YouTube API key not configured. Please add your API key in settings.",
+      message: MESSAGES.API_KEY_MISSING,
       isQuotaError: false,
       isAuthError: true,
       isNetworkError: false
@@ -210,7 +215,7 @@ export async function fetchVideosForTopic(
     safeSearch: "moderate",
     key: apiKey
   })
-  
+
   // Add page token if provided
   if (pageToken) {
     params.append("pageToken", pageToken)
@@ -219,8 +224,10 @@ export async function fetchVideosForTopic(
   const url = `${baseUrl}?${params.toString()}`
 
   try {
-    console.log(`[YouTube API] Fetching videos for topic: "${topic}"${pageToken ? ` (page: ${pageToken})` : ""}`)
-    
+    console.log(
+      `[YouTube API] Fetching videos for topic: "${topic}"${pageToken ? ` (page: ${pageToken})` : ""}`
+    )
+
     const response = await fetch(url)
     const data = await response.json()
 
@@ -232,19 +239,25 @@ export async function fetchVideosForTopic(
     }
 
     const searchResponse = data as YouTubeSearchResponse
-    
+
     // Filter valid videos
     const validItems = searchResponse.items.filter((item) => {
       return item.id.kind === "youtube#video" && item.id.videoId
     })
 
     if (validItems.length === 0) {
-      return { videos: [], nextPageToken: searchResponse.nextPageToken, totalResults: searchResponse.pageInfo.totalResults }
+      return {
+        videos: [],
+        nextPageToken: searchResponse.nextPageToken,
+        totalResults: searchResponse.pageInfo.totalResults
+      }
     }
 
     // Get video IDs and channel IDs for additional details
     const videoIds = validItems.map((item) => item.id.videoId!).join(",")
-    const channelIds = [...new Set(validItems.map((item) => item.snippet.channelId))].join(",")
+    const channelIds = [
+      ...new Set(validItems.map((item) => item.snippet.channelId))
+    ].join(",")
 
     // Fetch video details (duration, view count) in parallel with channel details
     const [videoDetailsResponse, channelResponse] = await Promise.all([
@@ -253,7 +266,10 @@ export async function fetchVideosForTopic(
     ])
 
     // Create maps for quick lookup
-    const videoDetailsMap = new Map<string, { duration: string; viewCount: string; categoryId: string }>()
+    const videoDetailsMap = new Map<
+      string,
+      { duration: string; viewCount: string; categoryId: string }
+    >()
     videoDetailsResponse.items.forEach((item) => {
       videoDetailsMap.set(item.id, {
         duration: item.contentDetails.duration,
@@ -264,12 +280,20 @@ export async function fetchVideosForTopic(
 
     const channelAvatarMap = new Map<string, string>()
     channelResponse.items.forEach((item) => {
-      channelAvatarMap.set(item.id, item.snippet.thumbnails.medium?.url || item.snippet.thumbnails.default.url)
+      channelAvatarMap.set(
+        item.id,
+        item.snippet.thumbnails.medium?.url ||
+          item.snippet.thumbnails.default.url
+      )
     })
 
     // Map the results with all details
     const allVideos: YouTubeVideo[] = validItems.map((item) => {
-      const details = videoDetailsMap.get(item.id.videoId!) || { duration: "PT0S", viewCount: "0", categoryId: "" }
+      const details = videoDetailsMap.get(item.id.videoId!) || {
+        duration: "PT0S",
+        viewCount: "0",
+        categoryId: ""
+      }
       return {
         videoId: item.id.videoId!,
         title: decodeHTMLEntities(item.snippet.title),
@@ -286,17 +310,19 @@ export async function fetchVideosForTopic(
     })
 
     // Filter out Shorts (< 60 seconds) and Music videos (categoryId = 10)
+    let filteredCount = 0
     const videos = allVideos.filter((video) => {
       // Parse duration to check for Shorts
       const durationSeconds = parseDurationToSeconds(video.duration)
-      const isShort = durationSeconds > 0 && durationSeconds < 60
-      
+      const isShort =
+        durationSeconds > 0 && durationSeconds < CONFIG.SHORTS_MAX_SECONDS
+
       // Check if it's a music video (categoryId 10 = Music)
-      const isMusic = video.categoryId === "10"
-      
+      const isMusic = video.categoryId === CONFIG.MUSIC_CATEGORY_ID
+
       // Also filter by title patterns that indicate music/songs
       const titleLower = video.title.toLowerCase()
-      const isSongByTitle = (
+      const isSongByTitle =
         titleLower.includes("official music video") ||
         titleLower.includes("official video") ||
         titleLower.includes("official audio") ||
@@ -305,25 +331,41 @@ export async function fetchVideosForTopic(
         titleLower.includes("music video") ||
         (titleLower.includes("ft.") && titleLower.includes("official")) ||
         (titleLower.includes("feat.") && titleLower.includes("official"))
-      )
-      
-      if (isShort) {
-        console.log(`[YouTube API] Filtered out Short: "${video.title}" (${durationSeconds}s)`)
+
+      const shouldFilter = isShort || isMusic || isSongByTitle
+
+      if (shouldFilter) {
+        filteredCount++
+        if (isShort) {
+          console.log(
+            `[YouTube API] Filtered out Short: "${video.title}" (${durationSeconds}s)`
+          )
+        }
+        if (isMusic || isSongByTitle) {
+          console.log(
+            `[YouTube API] Filtered out Music: "${video.title}" (category: ${video.categoryId})`
+          )
+        }
       }
-      if (isMusic || isSongByTitle) {
-        console.log(`[YouTube API] Filtered out Music: "${video.title}" (category: ${video.categoryId})`)
-      }
-      
-      return !isShort && !isMusic && !isSongByTitle
+
+      return !shouldFilter
     })
 
-    console.log(`[YouTube API] Found ${allVideos.length} videos, ${videos.length} after filtering for topic: "${topic}"`)
+    // Track statistics asynchronously (don't block the main flow)
+    if (filteredCount > 0) {
+      incrementVideosFiltered(filteredCount).catch((err) => {
+        console.error("[YouTube API] Failed to update statistics:", err)
+      })
+    }
+
+    console.log(
+      `[YouTube API] Found ${allVideos.length} videos, ${videos.length} after filtering (${filteredCount} filtered) for topic: "${topic}"`
+    )
     return {
       videos,
       nextPageToken: searchResponse.nextPageToken,
       totalResults: searchResponse.pageInfo.totalResults
     }
-
   } catch (error) {
     // Handle network errors
     if (error instanceof TypeError && error.message.includes("fetch")) {
@@ -335,7 +377,7 @@ export async function fetchVideosForTopic(
         isNetworkError: true
       } as YouTubeAPIError
     }
-    
+
     // Re-throw if already a YouTubeAPIError
     if ((error as YouTubeAPIError).code !== undefined) {
       throw error
@@ -355,18 +397,21 @@ export async function fetchVideosForTopic(
 /**
  * Fetch video details (duration, view count, category) for multiple videos
  */
-async function fetchVideoDetails(videoIds: string, apiKey: string): Promise<YouTubeVideoDetailsResponse> {
+async function fetchVideoDetails(
+  videoIds: string,
+  apiKey: string
+): Promise<YouTubeVideoDetailsResponse> {
   const url = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails,statistics,snippet&id=${videoIds}&key=${apiKey}`
-  
+
   try {
     const response = await fetch(url)
     const data = await response.json()
-    
+
     if (!response.ok || data.error) {
       console.error("[YouTube API] Error fetching video details:", data.error)
       return { items: [] }
     }
-    
+
     return data as YouTubeVideoDetailsResponse
   } catch (error) {
     console.error("[YouTube API] Failed to fetch video details:", error)
@@ -377,21 +422,44 @@ async function fetchVideoDetails(videoIds: string, apiKey: string): Promise<YouT
 /**
  * Fetch channel avatars for multiple channels
  */
-async function fetchChannelAvatars(channelIds: string, apiKey: string): Promise<YouTubeChannelResponse> {
+async function fetchChannelAvatars(
+  channelIds: string,
+  apiKey: string
+): Promise<YouTubeChannelResponse> {
+  if (!channelIds || channelIds.trim().length === 0) {
+    console.warn("[YouTube API] No channel IDs provided, skipping avatar fetch")
+    return { items: [] }
+  }
+
   const url = `https://www.googleapis.com/youtube/v3/channels?part=snippet&id=${channelIds}&key=${apiKey}`
-  
+
   try {
     const response = await fetch(url)
-    const data = await response.json()
-    
-    if (!response.ok || data.error) {
-      console.error("[YouTube API] Error fetching channel avatars:", data.error)
+
+    if (!response.ok) {
+      console.warn(
+        `[YouTube API] Channel avatar fetch failed: ${response.status} ${response.statusText}`
+      )
       return { items: [] }
     }
-    
+
+    const data = await response.json()
+
+    if (data.error) {
+      console.warn(
+        `[YouTube API] Channel avatar fetch API error:`,
+        data.error.message || data.error
+      )
+      return { items: [] }
+    }
+
     return data as YouTubeChannelResponse
   } catch (error) {
-    console.error("[YouTube API] Failed to fetch channel avatars:", error)
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error"
+    console.warn(
+      `[YouTube API] Failed to fetch channel avatars: ${errorMessage}`
+    )
     return { items: [] }
   }
 }
@@ -399,9 +467,16 @@ async function fetchChannelAvatars(channelIds: string, apiKey: string): Promise<
 /**
  * Get the best available thumbnail URL
  */
-function getBestThumbnail(thumbnails: YouTubeSearchItem["snippet"]["thumbnails"]): string {
+function getBestThumbnail(
+  thumbnails: YouTubeSearchItem["snippet"]["thumbnails"]
+): string {
   // Prefer high quality, fall back to medium, then default
-  return thumbnails.high?.url || thumbnails.medium?.url || thumbnails.default?.url || ""
+  return (
+    thumbnails.high?.url ||
+    thumbnails.medium?.url ||
+    thumbnails.default?.url ||
+    ""
+  )
 }
 
 /**
@@ -434,7 +509,7 @@ function decodeHTMLEntities(text: string): string {
     "&#x60;": "`",
     "&#x3D;": "="
   }
-  
+
   return text.replace(/&[#\w]+;/g, (match) => entities[match] || match)
 }
 
@@ -442,10 +517,10 @@ function decodeHTMLEntities(text: string): string {
  * Fetch videos using the topic from storage
  * Convenience wrapper that reads the topic from chrome.storage
  */
-export async function fetchVideosFromStorage(): Promise<YouTubeVideo[]> {
+export async function fetchVideosFromStorage(): Promise<FetchVideosResult> {
   const result = await chrome.storage.local.get(["focusTopic"])
   const topic = result.focusTopic
-  
+
   if (!topic) {
     throw {
       code: 400,
@@ -455,6 +530,6 @@ export async function fetchVideosFromStorage(): Promise<YouTubeVideo[]> {
       isNetworkError: false
     } as YouTubeAPIError
   }
-  
+
   return fetchVideosForTopic(topic)
 }

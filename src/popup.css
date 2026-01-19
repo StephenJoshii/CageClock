@@ -83,13 +83,16 @@ body {
 }
 
 @keyframes pulse-glow {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
     box-shadow: 0 0 8px var(--yt-accent);
   }
   50% {
     opacity: 0.6;
-    box-shadow: 0 0 16px var(--yt-accent), 0 0 24px var(--yt-accent);
+    box-shadow:
+      0 0 16px var(--yt-accent),
+      0 0 24px var(--yt-accent);
   }
 }
 
@@ -186,22 +189,30 @@ body {
   transform: translateY(-50%);
   background: #aaaaaa;
   border-radius: 50%;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(0, 0, 0, 0.1);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .material-toggle.active .material-toggle-thumb {
   transform: translateY(-50%) translateX(32px);
   background: var(--yt-accent);
-  box-shadow: 0 2px 8px rgba(62, 166, 255, 0.4), 0 0 0 1px rgba(62, 166, 255, 0.2);
+  box-shadow:
+    0 2px 8px rgba(62, 166, 255, 0.4),
+    0 0 0 1px rgba(62, 166, 255, 0.2);
 }
 
 .material-toggle:hover .material-toggle-thumb {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 0 8px rgba(255, 255, 255, 0.05);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.4),
+    0 0 0 8px rgba(255, 255, 255, 0.05);
 }
 
 .material-toggle.active:hover .material-toggle-thumb {
-  box-shadow: 0 2px 8px rgba(62, 166, 255, 0.5), 0 0 0 8px rgba(62, 166, 255, 0.1);
+  box-shadow:
+    0 2px 8px rgba(62, 166, 255, 0.5),
+    0 0 0 8px rgba(62, 166, 255, 0.1);
 }
 
 /* ===== TOPIC CHIPS SYSTEM ===== */
@@ -407,7 +418,9 @@ body {
   font-weight: 500;
   font-family: "Roboto", Arial, sans-serif;
   cursor: pointer;
-  transition: background 0.2s ease, transform 0.1s ease;
+  transition:
+    background 0.2s ease,
+    transform 0.1s ease;
 }
 
 .save-api-key-btn:hover {
@@ -434,8 +447,13 @@ body {
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 /* ===== FOOTER ===== */
