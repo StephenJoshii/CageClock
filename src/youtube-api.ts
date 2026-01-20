@@ -4,7 +4,7 @@
  */
 
 import { CONFIG, MESSAGES } from "./constants"
-import { incrementVideosFiltered } from "./storage"
+import { incrementVideosFiltered, getActiveApiKey } from "./storage"
 
 // Video data structure returned by our API
 export interface YouTubeVideo {
@@ -193,7 +193,7 @@ export async function fetchVideosForTopic(
   }
 
   // Get API key
-  const apiKey = await getYouTubeAPIKey()
+  const apiKey = await getActiveApiKey()
   if (!apiKey) {
     throw {
       code: 401,

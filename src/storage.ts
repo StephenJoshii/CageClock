@@ -130,3 +130,117 @@ async function checkAndResetStats(): Promise<void> {
     })
   }
 }
+
+// ===== API KEY MANAGEMENT =====
+
+export interface ApiKey {
+  id: string
+  name: string
+  key: string
+  isValid: boolean
+  lastVerified: number
+}
+
+/**
+ * Get all saved API keys
+ */
+export async function getApiKeys(): Promise<ApiKey[]> {
+  const result = await chrome.storage.local.get([STORAGE_KEYS.API_KEYS])
+  return result[STORAGE_KEYS.API_KEYS] || []
+}
+
+/**
+ * Save a new API key (after verification)
+ */
+export async function saveApiKey(
+  apiKey: string,
+  name?: string
+): Promise<ApiKey> {
+  const keys = await getApiKeys()
+
+  const newKey: ApiKey = {
+    id: Date.now().toString(),
+    name: name || `API Key ${keys.length + 1}`,
+    key: apiKey,
+    isValid: true,
+    lastVerified: Date.now()
+  }
+
+  const updatedKeys = [...keys, newKey]
+  await chrome.storage.local.set({ [STORAGE_KEYS.API_KEYS]: updatedKeys })
+
+  // Set this as the active key
+  await setActiveApiKey(newKey.id)
+
+  return newKey
+}
+
+/**
+ * Set which API key is active
+ */
+export async function setActiveApiKey(id: string): Promise<void> {
+  await chrome.storage.local.set({ [STORAGE_KEYS.ACTIVE_API_KEY_ID]: id })
+}
+
+/**
+ * Get the active API key
+ */
+export async function getActiveApiKey(): Promise<string | null> {
+  const result = await chrome.storage.local.get([
+    STORAGE_KEYS.ACTIVE_API_KEY_ID,
+    STORAGE_KEYS.API_KEYS
+  ])
+
+  const activeId = result[STORAGE_KEYS.ACTIVE_API_KEY_ID]
+  const keys: ApiKey[] = result[STORAGE_KEYS.API_KEYS] || []
+
+  if (!activeId) {
+    // Return first valid key if no active key set
+    const firstValid = keys.find((k) => k.isValid)
+    if (firstValid) {
+      return firstValid.key
+    }
+    return null
+  }
+
+  const activeKey = keys.find((k) => k.id === activeId)
+  return activeKey?.isValid ? activeKey.key : null
+}
+
+/**
+ * Delete an API key
+ */
+export async function deleteApiKey(id: string): Promise<void> {
+  const keys = await getApiKeys()
+  const updatedKeys = keys.filter((k) => k.id !== id)
+
+  await chrome.storage.local.set({ [STORAGE_KEYS.API_KEYS]: updatedKeys })
+
+  // If we deleted the active key, set a new active key
+  const result = await chrome.storage.local.get([
+    STORAGE_KEYS.ACTIVE_API_KEY_ID
+  ])
+  if (result[STORAGE_KEYS.ACTIVE_API_KEY_ID] === id) {
+    const firstValid = updatedKeys.find((k) => k.isValid)
+    if (firstValid) {
+      await setActiveApiKey(firstValid.id)
+    } else {
+      await chrome.storage.local.set({ [STORAGE_KEYS.ACTIVE_API_KEY_ID]: null })
+    }
+  }
+}
+
+/**
+ * Update API key validity status
+ */
+export async function updateApiKeyValidity(
+  id: string,
+  isValid: boolean
+): Promise<void> {
+  const keys = await getApiKeys()
+  const updatedKeys = keys.map((k) =>
+    k.id === id ? { ...k, isValid, lastVerified: Date.now() } : k
+  )
+
+  await chrome.storage.local.set({ [STORAGE_KEYS.API_KEYS]: updatedKeys })
+}

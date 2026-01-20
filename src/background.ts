@@ -1,14 +1,15 @@
-import { type FocusSettings, incrementVideosFiltered } from "./storage"
+import {
+  type FocusSettings,
+  incrementVideosFiltered,
+  getActiveApiKey
+} from "./storage"
 import { STORAGE_KEYS, CONFIG } from "./constants"
 import {
   fetchVideosForTopic,
   fetchVideosFromStorage,
   type YouTubeVideo,
   type FetchVideosResult,
-  type YouTubeAPIError,
-  YOUTUBE_API_KEY_STORAGE,
-  setYouTubeAPIKey,
-  getYouTubeAPIKey
+  type YouTubeAPIError
 } from "./youtube-api"
 
 export {}
@@ -507,20 +508,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         })
       return true
 
-    case "SET_API_KEY":
-      // Set the YouTube API key
-      setYouTubeAPIKey(message.apiKey)
-        .then(() => {
-          sendResponse({ success: true })
-        })
-        .catch((error) => {
-          sendResponse({ success: false, error: error.message })
-        })
-      return true
-
     case "GET_API_KEY":
       // Get the current API key (for checking if it's set)
-      getYouTubeAPIKey()
+      getActiveApiKey()
         .then((apiKey) => {
           sendResponse({ success: true, hasApiKey: !!apiKey })
         })

@@ -4,7 +4,12 @@ import {
   getSettings,
   setEnabled,
   setFocusTopic,
-  getStatistics
+  getStatistics,
+  getApiKeys,
+  saveApiKey,
+  deleteApiKey,
+  setActiveApiKey,
+  type ApiKey
 } from "./storage"
 import { STORAGE_KEYS, MESSAGES } from "./constants"
 
@@ -17,10 +22,15 @@ function IndexPopup() {
   const [isSaving, setIsSaving] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [apiKey, setApiKey] = useState("")
+  const [apiKeyName, setApiKeyName] = useState("")
   const [hasApiKey, setHasApiKey] = useState(false)
   const [apiKeyStatus, setApiKeyStatus] = useState("")
   const [isVerifying, setIsVerifying] = useState(false)
   const [videosFiltered, setVideosFiltered] = useState(0)
+
+  // API key management
+  const [apiKeys, setApiKeysList] = useState<ApiKey[]>([])
+  const [showApiKeyInput, setShowApiKeyInput] = useState(false)
 
   // Break mode state
   const [isOnBreak, setIsOnBreak] = useState(false)
@@ -41,12 +51,8 @@ function IndexPopup() {
       }
     })
 
-    // Check if API key is configured
-    chrome.runtime.sendMessage({ type: "GET_API_KEY" }, (response) => {
-      if (response?.success) {
-        setHasApiKey(response.hasApiKey)
-      }
-    })
+    // Load API keys
+    loadApiKeys()
 
     // Load statistics
     loadStatistics()
@@ -54,6 +60,12 @@ function IndexPopup() {
     // Check break status
     checkBreakStatus()
   }, [])
+
+  const loadApiKeys = async () => {
+    const keys = await getApiKeys()
+    setApiKeysList(keys)
+    setHasApiKey(keys.length > 0 && keys.some((k) => k.isValid))
+  }
 
   // Update countdown timer
   useEffect(() => {
@@ -165,16 +177,13 @@ function IndexPopup() {
 
       if (response?.valid) {
         // API key is valid, save it
-        await new Promise((resolve) => {
-          chrome.runtime.sendMessage(
-            { type: "SET_API_KEY", apiKey: apiKey.trim() },
-            resolve
-          )
-        })
-
+        await saveApiKey(apiKey.trim(), apiKeyName.trim() || undefined)
         setApiKeyStatus("✅ API key is valid and saved!")
         setHasApiKey(true)
         setApiKey("")
+        setApiKeyName("")
+        setShowApiKeyInput(false)
+        await loadApiKeys()
         setTimeout(() => setApiKeyStatus(""), 3000)
       } else if (response?.error) {
         // API key is invalid
@@ -187,6 +196,39 @@ function IndexPopup() {
     } finally {
       setIsVerifying(false)
     }
+  }
+
+  const handleSelectApiKey = async (id: string) => {
+    await setActiveApiKey(id)
+    await loadApiKeys()
+  }
+
+  const handleDeleteApiKey = async (id: string) => {
+    await deleteApiKey(id)
+    await loadApiKeys()
+    setApiKeyStatus("🗑️ API key deleted")
+    setTimeout(() => setApiKeyStatus(""), 2000)
+  }
+
+  const getVerificationStatus = (key: ApiKey): string => {
+    if (!key.isValid) {
+      return "❌ Invalid"
+    }
+
+    const minutesAgo = Math.floor((Date.now() - key.lastVerified) / 60000)
+    if (minutesAgo < 1) {
+      return "✅ Just verified"
+    } else if (minutesAgo < 60) {
+      return `✅ Verified ${minutesAgo}m ago`
+    } else if (minutesAgo < 1440) {
+      return `✅ Verified ${Math.floor(minutesAgo / 60)}h ago`
+    } else {
+      return `✅ Verified ${Math.floor(minutesAgo / 1440)}d ago`
+    }
+  }
+
+  const formatApiKey = (key: string): string => {
+    return `${key.substring(0, 8)}...${key.substring(key.length - 4)}`
   }
 
   const handleStartBreak = () => {
@@ -314,39 +356,115 @@ function IndexPopup() {
         {showSettings && (
           <div className="settings-panel">
             <div className="setting-row vertical">
-              <label className="setting-label" htmlFor="api-key">
-                YouTube API Key
-                {hasApiKey && (
-                  <span className="api-status configured">✓ Configured</span>
-                )}
-                {!hasApiKey && (
-                  <span className="api-status not-configured">Not set</span>
+              <label className="setting-label">
+                YouTube API Keys
+                {apiKeys.length > 0 && (
+                  <span className="api-status configured">
+                    {apiKeys.length} key{apiKeys.length !== 1 ? "s" : ""} saved
+                  </span>
                 )}
               </label>
-              <input
-                id="api-key"
-                type="password"
-                className="topic-input"
-                placeholder="Enter your YouTube API key..."
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-              />
-              <button
-                className="save-api-key-btn"
-                onClick={handleSaveApiKey}
-                disabled={isVerifying}>
-                {isVerifying ? "Verifying..." : "Save API Key"}
-              </button>
-              {apiKeyStatus && <p className="api-key-status">{apiKeyStatus}</p>}
-              <p className="input-hint">
-                Get a key from{" "}
-                <a
-                  href="https://console.cloud.google.com/apis/credentials"
-                  target="_blank"
-                  rel="noopener noreferrer">
-                  Google Cloud Console
-                </a>
-              </p>
+
+              {/* Show list of API keys */}
+              {apiKeys.length > 0 && (
+                <div className="api-keys-list">
+                  {apiKeys.map((key) => (
+                    <div
+                      key={key.id}
+                      className={`api-key-item ${key.isValid ? "valid" : "invalid"}`}>
+                      <div className="api-key-info">
+                        <div className="api-key-header">
+                          <span className="api-key-name">{key.name}</span>
+                          <span className="api-key-verification-status">
+                            {getVerificationStatus(key)}
+                          </span>
+                        </div>
+                        <span className="api-key-value">
+                          {formatApiKey(key.key)}
+                        </span>
+                      </div>
+                      <div className="api-key-actions">
+                        {key.isValid && (
+                          <button
+                            className="api-key-action-btn select"
+                            onClick={() => handleSelectApiKey(key.id)}
+                            title="Use this API key">
+                            ✓
+                          </button>
+                        )}
+                        <button
+                          className="api-key-action-btn delete"
+                          onClick={() => handleDeleteApiKey(key.id)}
+                          title="Delete this API key">
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Add new API key form */}
+              {!showApiKeyInput && (
+                <button
+                  className="add-api-key-btn"
+                  onClick={() => setShowApiKeyInput(true)}>
+                  + Add New API Key
+                </button>
+              )}
+
+              {showApiKeyInput && (
+                <div className="api-key-input-form">
+                  <div className="api-key-input-row">
+                    <input
+                      id="api-key-name"
+                      type="text"
+                      className="topic-input api-name-input"
+                      placeholder="Name (optional)"
+                      value={apiKeyName}
+                      onChange={(e) => setApiKeyName(e.target.value)}
+                    />
+                    <input
+                      id="api-key"
+                      type="password"
+                      className="topic-input api-key-input"
+                      placeholder="Enter your YouTube API key..."
+                      value={apiKey}
+                      onChange={(e) => setApiKey(e.target.value)}
+                    />
+                  </div>
+                  <div className="api-key-buttons">
+                    <button
+                      className="api-key-btn cancel"
+                      onClick={() => {
+                        setShowApiKeyInput(false)
+                        setApiKey("")
+                        setApiKeyName("")
+                        setApiKeyStatus("")
+                      }}>
+                      Cancel
+                    </button>
+                    <button
+                      className="api-key-btn save"
+                      onClick={handleSaveApiKey}
+                      disabled={isVerifying || !apiKey.trim()}>
+                      {isVerifying ? "Verifying..." : "Save & Verify"}
+                    </button>
+                  </div>
+                  {apiKeyStatus && (
+                    <p className="api-key-status-message">{apiKeyStatus}</p>
+                  )}
+                  <p className="input-hint">
+                    Get a key from{" "}
+                    <a
+                      href="https://console.cloud.google.com/apis/credentials"
+                      target="_blank"
+                      rel="noopener noreferrer">
+                      Google Cloud Console
+                    </a>
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         )}

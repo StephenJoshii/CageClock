@@ -83,5 +83,8 @@ export const STORAGE_KEYS = {
   VIDEOS_WATCHED_TODAY: "videosWatchedToday",
   TIME_FOCUSED_TODAY: "timeFocusedToday",
   LAST_STATS_RESET: "lastStatsReset",
-  SESSION_START_TIME: "sessionStartTime"
+  SESSION_START_TIME: "sessionStartTime",
+  // API Key Management
+  API_KEYS: "apiKeys",
+  ACTIVE_API_KEY_ID: "activeApiKeyId"
 } as const

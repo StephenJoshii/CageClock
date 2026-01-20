@@ -456,6 +456,212 @@ body {
   color: var(--yt-error);
 }
 
+/* ===== API KEYS LIST ===== */
+.api-keys-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.api-key-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: var(--yt-bg-elevated);
+  border: 1px solid var(--yt-border);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.api-key-item:hover {
+  border-color: var(--yt-accent);
+  background: var(--yt-bg-hover);
+}
+
+.api-key-item.valid {
+  border-left: 3px solid var(--yt-success);
+}
+
+.api-key-item.invalid {
+  border-left: 3px solid var(--yt-error);
+  opacity: 0.6;
+}
+
+.api-key-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.api-key-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.api-key-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--yt-text-primary);
+}
+
+.api-key-verification-status {
+  font-size: 11px;
+  color: var(--yt-text-secondary);
+}
+
+.api-key-value {
+  font-family: "Roboto Mono", monospace;
+  font-size: 12px;
+  color: var(--yt-text-secondary);
+  letter-spacing: 0.5px;
+}
+
+.api-key-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: 12px;
+}
+
+.api-key-action-btn {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.api-key-action-btn.select {
+  background: rgba(43, 166, 64, 0.1);
+  color: var(--yt-success);
+}
+
+.api-key-action-btn.select:hover {
+  background: rgba(43, 166, 64, 0.2);
+}
+
+.api-key-action-btn.delete {
+  background: rgba(255, 78, 69, 0.1);
+  color: var(--yt-error);
+}
+
+.api-key-action-btn.delete:hover {
+  background: rgba(255, 78, 69, 0.2);
+}
+
+/* ===== API KEY INPUT FORM ===== */
+.add-api-key-btn {
+  width: 100%;
+  padding: 10px 16px;
+  background: var(--yt-accent);
+  border: none;
+  border-radius: 18px;
+  color: var(--yt-bg-primary);
+  font-size: 14px;
+  font-weight: 500;
+  font-family: "Roboto", Arial, sans-serif;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.add-api-key-btn:hover {
+  background: var(--yt-accent-hover);
+}
+
+.api-key-input-form {
+  margin-top: 12px;
+  padding: 12px;
+  background: var(--yt-bg-elevated);
+  border: 1px solid var(--yt-border);
+  border-radius: 8px;
+}
+
+.api-key-input-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.api-name-input {
+  width: 40%;
+}
+
+.api-key-input {
+  flex: 1;
+}
+
+.api-key-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.api-key-btn {
+  flex: 1;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 18px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: "Roboto", Arial, sans-serif;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.api-key-btn.save {
+  background: var(--yt-accent);
+  color: var(--yt-bg-primary);
+}
+
+.api-key-btn.save:hover:not(:disabled) {
+  background: var(--yt-accent-hover);
+}
+
+.api-key-btn.save:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.api-key-btn.cancel {
+  background: var(--yt-bg-secondary);
+  color: var(--yt-text-primary);
+}
+
+.api-key-btn.cancel:hover {
+  background: var(--yt-bg-hover);
+}
+
+.api-key-status-message {
+  font-size: 12px;
+  text-align: center;
+  margin-bottom: 12px;
+  padding: 8px;
+  border-radius: 6px;
+  word-wrap: break-word;
+}
+
+.api-key-status-message:has-text("✅"),
+.api-key-status-message:has-text("✓") {
+  background: rgba(43, 166, 64, 0.1);
+  color: var(--yt-success);
+}
+
+.api-key-status-message:has-text("❌"),
+.api-key-status-message:has-text("Failed"),
+.api-key-status-message:has-text("Network"),
+.api-key-status-message:has-text("🗑️"),
+.api-key-status-message:has-text("Please enter") {
+  background: rgba(255, 78, 69, 0.1);
+  color: var(--yt-error);
+}
+
 /* ===== SAVING INDICATOR ===== */
 .saving-indicator {
   text-align: center;
