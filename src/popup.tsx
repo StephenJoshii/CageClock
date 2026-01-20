@@ -19,6 +19,7 @@ function IndexPopup() {
   const [apiKey, setApiKey] = useState("")
   const [hasApiKey, setHasApiKey] = useState(false)
   const [apiKeyStatus, setApiKeyStatus] = useState("")
+  const [isVerifying, setIsVerifying] = useState(false)
   const [videosFiltered, setVideosFiltered] = useState(0)
 
   // Break mode state
@@ -145,25 +146,47 @@ function IndexPopup() {
     setIsSaving(false)
   }
 
-  const handleSaveApiKey = () => {
+  const handleSaveApiKey = async () => {
     if (!apiKey.trim()) {
       setApiKeyStatus("Please enter an API key")
       return
     }
 
-    chrome.runtime.sendMessage(
-      { type: "SET_API_KEY", apiKey: apiKey.trim() },
-      (response) => {
-        if (response?.success) {
-          setApiKeyStatus("✓ API key saved!")
-          setHasApiKey(true)
-          setApiKey("")
-          setTimeout(() => setApiKeyStatus(""), 2000)
-        } else {
-          setApiKeyStatus("Failed to save API key")
-        }
+    setIsVerifying(true)
+    setApiKeyStatus("🔄 Verifying API key...")
+
+    try {
+      const response = (await new Promise((resolve) => {
+        chrome.runtime.sendMessage(
+          { type: "VERIFY_API_KEY", apiKey: apiKey.trim() },
+          resolve
+        )
+      })) as { valid?: boolean; error?: string }
+
+      if (response?.valid) {
+        // API key is valid, save it
+        await new Promise((resolve) => {
+          chrome.runtime.sendMessage(
+            { type: "SET_API_KEY", apiKey: apiKey.trim() },
+            resolve
+          )
+        })
+
+        setApiKeyStatus("✅ API key is valid and saved!")
+        setHasApiKey(true)
+        setApiKey("")
+        setTimeout(() => setApiKeyStatus(""), 3000)
+      } else if (response?.error) {
+        // API key is invalid
+        setApiKeyStatus(`❌ ${response.error}`)
+      } else {
+        setApiKeyStatus("Failed to verify API key")
       }
-    )
+    } catch (error) {
+      setApiKeyStatus("Network error while verifying")
+    } finally {
+      setIsVerifying(false)
+    }
   }
 
   const handleStartBreak = () => {
@@ -308,8 +331,11 @@ function IndexPopup() {
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
               />
-              <button className="save-api-key-btn" onClick={handleSaveApiKey}>
-                Save API Key
+              <button
+                className="save-api-key-btn"
+                onClick={handleSaveApiKey}
+                disabled={isVerifying}>
+                {isVerifying ? "Verifying..." : "Save API Key"}
               </button>
               {apiKeyStatus && <p className="api-key-status">{apiKeyStatus}</p>}
               <p className="input-hint">

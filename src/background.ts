@@ -90,6 +90,48 @@ function onFocusTopicChanged(newTopic: string) {
   }
 }
 
+// ===== API KEY VERIFICATION =====
+
+/**
+ * Verify if an API key is valid by making a test request
+ */
+async function verifyApiKey(apiKey: string): Promise<boolean> {
+  try {
+    const testUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=test&type=video&maxResults=1&key=${apiKey}`
+
+    const response = await fetch(testUrl)
+
+    if (!response.ok) {
+      console.error(
+        "[CageClock] API key verification failed:",
+        response.status,
+        response.statusText
+      )
+      return false
+    }
+
+    const data = await response.json()
+
+    if (data.error) {
+      console.error("[CageClock] API key verification error:", data.error)
+
+      if (data.error.message) {
+        throw new Error(data.error.message)
+      }
+
+      return false
+    }
+
+    console.log("[CageClock] API key verified successfully")
+    return true
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error"
+    console.error("[CageClock] API key verification error:", errorMessage)
+    throw new Error(errorMessage)
+  }
+}
+
 // ===== ALGORITHM NUDGE FUNCTIONS =====
 
 /**
@@ -537,6 +579,21 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         })
         .catch((error) => {
           sendResponse({ success: false, error: error.message })
+        })
+      return true
+
+    case "VERIFY_API_KEY":
+      // Verify API key by making a test request
+      verifyApiKey(message.apiKey)
+        .then((isValid) => {
+          if (isValid) {
+            sendResponse({ valid: true })
+          } else {
+            sendResponse({ valid: false, error: "Invalid API key" })
+          }
+        })
+        .catch((error) => {
+          sendResponse({ valid: false, error: error.message })
         })
       return true
 

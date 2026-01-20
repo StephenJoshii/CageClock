@@ -431,11 +431,29 @@ body {
   transform: scale(0.98);
 }
 
+.save-api-key-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .api-key-status {
   font-size: 12px;
   text-align: center;
   margin-top: 8px;
   color: var(--yt-accent);
+  word-wrap: break-word;
+}
+
+.api-key-status:has-text("✅"),
+.api-key-status:has-text("✓") {
+  color: var(--yt-success);
+}
+
+.api-key-status:has-text("❌"),
+.api-key-status:has-text("Failed"),
+.api-key-status:has-text("Network"),
+.api-key-status:has-text("Please enter") {
+  color: var(--yt-error);
 }
 
 /* ===== SAVING INDICATOR ===== */
