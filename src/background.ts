@@ -3,6 +3,7 @@ import {
   incrementVideosFiltered,
   getActiveApiKey
 } from "./storage"
+import { logger } from "./utils/logger"
 import { STORAGE_KEYS, CONFIG } from "./constants"
 import {
   fetchVideosForTopic,
@@ -573,7 +574,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       return true
 
     case "VERIFY_API_KEY":
-      // Verify API key by making a test request
       verifyApiKey(message.apiKey)
         .then((isValid) => {
           if (isValid) {
@@ -583,7 +583,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           }
         })
         .catch((error) => {
-          sendResponse({ valid: false, error: error.message })
+          const errorMessage =
+            error instanceof Error ? error.message : String(error)
+          logger.error("API key verification failed:", errorMessage)
+          sendResponse({ valid: false, error: errorMessage })
         })
       return true
 

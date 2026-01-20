@@ -61,3 +61,12 @@ temp/
 # Keys (never commit API keys!)
 keys/
 *.key
+
+# Documentation (user-facing docs should be in repo)
+# Technical documentation is tracked, but keep it organized
+TECHNICAL_README.md
+API_KEY_MANAGEMENT.md
+TESTING.md
+ISSUES_FIXED.md
+ARCHITECTURE_ANALYSIS.md  ⭐ NEW
+DOCUMENTATION_SUMMARY.md
