@@ -1,18 +1,16 @@
 import { useEffect, useState } from "react"
-
 import {
   getSettings,
   setEnabled,
   setFocusTopic,
   getStatistics,
-  getApiKeys,
   saveApiKey,
-  deleteApiKey,
+  getApiKeys,
   setActiveApiKey,
+  deleteApiKey,
   type ApiKey
 } from "./storage"
-import { STORAGE_KEYS, MESSAGES } from "./constants"
-
+import { STORAGE_KEYS } from "./constants"
 import "./popup.css"
 
 function IndexPopup() {
@@ -24,24 +22,18 @@ function IndexPopup() {
   const [apiKey, setApiKey] = useState("")
   const [apiKeyName, setApiKeyName] = useState("")
   const [hasApiKey, setHasApiKey] = useState(false)
-  const [apiKeyStatus, setApiKeyStatus] = useState("")
   const [isVerifying, setIsVerifying] = useState(false)
   const [videosFiltered, setVideosFiltered] = useState(0)
+  const [statusMsg, setStatusMsg] = useState("")
 
-  // API key management
   const [apiKeys, setApiKeysList] = useState<ApiKey[]>([])
-  const [showApiKeyInput, setShowApiKeyInput] = useState(false)
-
-  // Break mode state
   const [isOnBreak, setIsOnBreak] = useState(false)
   const [breakEndTime, setBreakEndTime] = useState<number | null>(null)
   const [remainingTime, setRemainingTime] = useState("")
 
   useEffect(() => {
-    // Load saved settings on mount
     getSettings().then((settings) => {
       setIsEnabled(settings.isEnabled)
-      // Parse topics from comma-separated string
       if (settings.focusTopic) {
         const savedTopics = settings.focusTopic
           .split(",")
@@ -51,13 +43,8 @@ function IndexPopup() {
       }
     })
 
-    // Load API keys
     loadApiKeys()
-
-    // Load statistics
     loadStatistics()
-
-    // Check break status
     checkBreakStatus()
   }, [])
 
@@ -67,7 +54,11 @@ function IndexPopup() {
     setHasApiKey(keys.length > 0 && keys.some((k) => k.isValid))
   }
 
-  // Update countdown timer
+  const loadStatistics = async () => {
+    const stats = await getStatistics()
+    setVideosFiltered(stats.videosFiltered)
+  }
+
   useEffect(() => {
     if (!isOnBreak || !breakEndTime) return
 
@@ -77,7 +68,6 @@ function IndexPopup() {
         setIsOnBreak(false)
         setBreakEndTime(null)
         setRemainingTime("")
-        // Refresh enabled state
         getSettings().then((settings) => {
           setIsEnabled(settings.isEnabled)
         })
@@ -103,11 +93,6 @@ function IndexPopup() {
     })
   }
 
-  const loadStatistics = async () => {
-    const stats = await getStatistics()
-    setVideosFiltered(stats.videosFiltered)
-  }
-
   const handleToggle = async () => {
     const newValue = !isEnabled
     setIsEnabled(newValue)
@@ -120,9 +105,7 @@ function IndexPopup() {
     setInputValue(e.target.value)
   }
 
-  const handleInputKeyDown = async (
-    e: React.KeyboardEvent<HTMLInputElement>
-  ) => {
+  const handleInputKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && inputValue.trim()) {
       e.preventDefault()
       const newTopic = inputValue.trim()
@@ -141,7 +124,6 @@ function IndexPopup() {
       inputValue === "" &&
       topics.length > 0
     ) {
-      // Remove last chip on backspace if input is empty
       const newTopics = topics.slice(0, -1)
       setTopics(newTopics)
       setIsSaving(true)
@@ -160,12 +142,12 @@ function IndexPopup() {
 
   const handleSaveApiKey = async () => {
     if (!apiKey.trim()) {
-      setApiKeyStatus("Please enter an API key")
+      setStatusMsg("Enter an API key")
       return
     }
 
     setIsVerifying(true)
-    setApiKeyStatus("🔄 Verifying API key...")
+    setStatusMsg("Verifying...")
 
     try {
       const response = (await new Promise((resolve) => {
@@ -176,23 +158,21 @@ function IndexPopup() {
       })) as { valid?: boolean; error?: string }
 
       if (response?.valid) {
-        // API key is valid, save it
         await saveApiKey(apiKey.trim(), apiKeyName.trim() || undefined)
-        setApiKeyStatus("✅ API key is valid and saved!")
+        setStatusMsg("Key saved ✓")
         setHasApiKey(true)
         setApiKey("")
         setApiKeyName("")
-        setShowApiKeyInput(false)
+        setShowSettings(false)
         await loadApiKeys()
-        setTimeout(() => setApiKeyStatus(""), 3000)
+        setTimeout(() => setStatusMsg(""), 2000)
       } else if (response?.error) {
-        // API key is invalid
-        setApiKeyStatus(`❌ ${response.error}`)
+        setStatusMsg(response.error)
       } else {
-        setApiKeyStatus("Failed to verify API key")
+        setStatusMsg("Invalid key")
       }
     } catch (error) {
-      setApiKeyStatus("Network error while verifying")
+      setStatusMsg("Network error")
     } finally {
       setIsVerifying(false)
     }
@@ -206,29 +186,8 @@ function IndexPopup() {
   const handleDeleteApiKey = async (id: string) => {
     await deleteApiKey(id)
     await loadApiKeys()
-    setApiKeyStatus("🗑️ API key deleted")
-    setTimeout(() => setApiKeyStatus(""), 2000)
-  }
-
-  const getVerificationStatus = (key: ApiKey): string => {
-    if (!key.isValid) {
-      return "❌ Invalid"
-    }
-
-    const minutesAgo = Math.floor((Date.now() - key.lastVerified) / 60000)
-    if (minutesAgo < 1) {
-      return "✅ Just verified"
-    } else if (minutesAgo < 60) {
-      return `✅ Verified ${minutesAgo}m ago`
-    } else if (minutesAgo < 1440) {
-      return `✅ Verified ${Math.floor(minutesAgo / 60)}h ago`
-    } else {
-      return `✅ Verified ${Math.floor(minutesAgo / 1440)}d ago`
-    }
-  }
-
-  const formatApiKey = (key: string): string => {
-    return `${key.substring(0, 8)}...${key.substring(key.length - 4)}`
+    setStatusMsg("Key deleted")
+    setTimeout(() => setStatusMsg(""), 1500)
   }
 
   const handleStartBreak = () => {
@@ -247,7 +206,6 @@ function IndexPopup() {
         setIsOnBreak(false)
         setBreakEndTime(null)
         setRemainingTime("")
-        // Refresh enabled state
         getSettings().then((settings) => {
           setIsEnabled(settings.isEnabled)
         })
@@ -255,148 +213,128 @@ function IndexPopup() {
     })
   }
 
+  const getVerificationStatus = (key: ApiKey): string => {
+    if (!key.isValid) return "Invalid"
+    const minutesAgo = Math.floor((Date.now() - key.lastVerified) / 60000)
+    if (minutesAgo < 1) return "Just now"
+    if (minutesAgo < 60) return `${minutesAgo}m ago`
+    if (minutesAgo < 1440) return `${Math.floor(minutesAgo / 60)}h ago`
+    return `${Math.floor(minutesAgo / 1440)}d ago`
+  }
+
+  const formatApiKey = (key: string): string => {
+    return `${key.substring(0, 8)}...${key.substring(key.length - 4)}`
+  }
+
   return (
-    <div className="popup-container">
-      {/* Status Indicator */}
-      {isEnabled && (
-        <div className="status-indicator">
-          <span className="status-pulse"></span>
-          <span className="status-text">Algorithm: Redirected</span>
-        </div>
-      )}
-
-      <header className="popup-header">
-        <h1>CageClock</h1>
-        <p className="subtitle">Stay focused on what matters</p>
-      </header>
-
-      <main className="popup-content">
-        {/* Focus Mode Toggle - iOS/Material Style */}
-        <div className="setting-row">
-          <label className="setting-label" htmlFor="focus-toggle">
-            Focus Mode
-          </label>
-          <button
-            id="focus-toggle"
-            className={`material-toggle ${isEnabled ? "active" : ""}`}
-            onClick={handleToggle}
-            aria-pressed={isEnabled}
-            aria-label={
-              isEnabled ? "Turn off focus mode" : "Turn on focus mode"
-            }>
-            <span className="material-toggle-track"></span>
-            <span className="material-toggle-thumb"></span>
+    <div className="p">
+      {isOnBreak ? (
+        <div className="break-view">
+          <div className="break-timer">{remainingTime}</div>
+          <p className="break-text">Break time</p>
+          <button className="btn-primary" onClick={handleEndBreak}>
+            Resume Focus
           </button>
         </div>
-
-        {/* Topic Chips System */}
-        <div className="setting-row vertical">
-          <label className="setting-label">Focus Topics</label>
-          <div className="chips-container">
-            {topics.map((t, index) => (
-              <span key={index} className="topic-chip">
-                {t}
-                <button
-                  className="chip-remove"
-                  onClick={() => removeChip(t)}
-                  aria-label={`Remove ${t}`}>
-                  x
-                </button>
-              </span>
-            ))}
-            <input
-              type="text"
-              className="chip-input"
-              placeholder={
-                topics.length === 0
-                  ? "Type a topic and press Enter..."
-                  : "Add more..."
-              }
-              value={inputValue}
-              onChange={handleInputChange}
-              onKeyDown={handleInputKeyDown}
-            />
-          </div>
-          <p className="input-hint">Press Enter to add a topic chip</p>
-        </div>
-
-        {isSaving && <div className="saving-indicator">Saving...</div>}
-
-        {/* Emergency Exit / Break Mode */}
-        {isOnBreak ? (
-          <div className="break-panel">
-            <div className="break-header">
-              <span className="break-icon">☕</span>
-              <span className="break-title">Break Mode Active</span>
+      ) : (
+        <>
+          <header className="header">
+            <div className="logo">
+              <span className="logo-icon">◎</span>
+              <span>CageClock</span>
             </div>
-            <div className="break-timer">{remainingTime}</div>
-            <p className="break-message">
-              Take a breather! Focus mode will resume automatically.
-            </p>
-            <button className="end-break-btn" onClick={handleEndBreak}>
-              End Break Early
-            </button>
-          </div>
-        ) : (
-          isEnabled && (
-            <button className="emergency-exit-btn" onClick={handleStartBreak}>
-              Emergency Exit (10 min break)
-            </button>
-          )
-        )}
+            <div className="header-actions">
+              <button
+                className={`toggle ${isEnabled ? "on" : ""}`}
+                onClick={handleToggle}
+                disabled={isSaving}>
+                <span className="toggle-thumb"></span>
+              </button>
+            </div>
+          </header>
 
-        {/* Settings Toggle */}
-        <button
-          className="settings-toggle"
-          onClick={() => setShowSettings(!showSettings)}>
-          {showSettings ? "Hide Settings" : "API Settings"}
-        </button>
+          <main className="main">
+            {isEnabled && (
+              <div className="topics-section">
+                <div className="chips">
+                  {topics.map((t) => (
+                    <span key={t} className="chip">
+                      {t}
+                      <button className="chip-x" onClick={() => removeChip(t)}>
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                  <input
+                    className="chip-input"
+                    placeholder={topics.length ? "+" : "Add topic..."}
+                    value={inputValue}
+                    onChange={handleInputChange}
+                    onKeyDown={handleInputKeyDown}
+                  />
+                </div>
+                <button className="break-btn" onClick={handleStartBreak}>
+                  Take a break
+                </button>
+              </div>
+            )}
 
-        {/* API Key Settings Panel */}
-        {showSettings && (
-          <div className="settings-panel">
-            <div className="setting-row vertical">
-              <label className="setting-label">
-                YouTube API Keys
-                {apiKeys.length > 0 && (
-                  <span className="api-status configured">
-                    {apiKeys.length} key{apiKeys.length !== 1 ? "s" : ""} saved
-                  </span>
-                )}
-              </label>
+            {!isEnabled && (
+              <div className="empty-state">
+                <p>Toggle focus mode to start</p>
+              </div>
+            )}
+          </main>
 
-              {/* Show list of API keys */}
+          <footer className="footer">
+            <div className="footer-left">
+              <button
+                className="icon-btn"
+                onClick={() => setShowSettings(!showSettings)}
+                title="Settings">
+                ⚙️
+              </button>
+              {statusMsg && <span className="status-msg">{statusMsg}</span>}
+            </div>
+            <div className="footer-right">
+              <span className="stat">{videosFiltered} filtered</span>
+            </div>
+          </footer>
+
+          {showSettings && (
+            <div className="settings-panel">
+              <div className="settings-header">
+                <span>API Keys</span>
+                <button className="icon-btn" onClick={() => setShowSettings(false)}>
+                  ×
+                </button>
+              </div>
+
               {apiKeys.length > 0 && (
-                <div className="api-keys-list">
+                <div className="key-list">
                   {apiKeys.map((key) => (
                     <div
                       key={key.id}
-                      className={`api-key-item ${key.isValid ? "valid" : "invalid"}`}>
-                      <div className="api-key-info">
-                        <div className="api-key-header">
-                          <span className="api-key-name">{key.name}</span>
-                          <span className="api-key-verification-status">
-                            {getVerificationStatus(key)}
-                          </span>
-                        </div>
-                        <span className="api-key-value">
-                          {formatApiKey(key.key)}
-                        </span>
+                      className={`key-item ${key.isValid ? "valid" : "invalid"}`}>
+                      <div className="key-info">
+                        <span className="key-name">{key.name}</span>
+                        <span className="key-val">{formatApiKey(key.key)}</span>
+                        <span className="key-status">{getVerificationStatus(key)}</span>
                       </div>
-                      <div className="api-key-actions">
+                      <div className="key-actions">
                         {key.isValid && (
                           <button
-                            className="api-key-action-btn select"
+                            className="icon-btn-small"
                             onClick={() => handleSelectApiKey(key.id)}
-                            title="Use this API key">
+                            title="Use this key">
                             ✓
                           </button>
                         )}
                         <button
-                          className="api-key-action-btn delete"
+                          className="icon-btn-small"
                           onClick={() => handleDeleteApiKey(key.id)}
-                          title="Delete this API key">
-                          ✕
+                          title="Delete">
+                          ×
                         </button>
                       </div>
                     </div>
@@ -404,89 +342,39 @@ function IndexPopup() {
                 </div>
               )}
 
-              {/* Add new API key form */}
-              {!showApiKeyInput && (
+              <div className="add-key">
+                <input
+                  className="input"
+                  placeholder="Name (optional)"
+                  value={apiKeyName}
+                  onChange={(e) => setApiKeyName(e.target.value)}
+                />
+                <input
+                  className="input"
+                  type="password"
+                  placeholder="API key"
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                />
                 <button
-                  className="add-api-key-btn"
-                  onClick={() => setShowApiKeyInput(true)}>
-                  + Add New API Key
+                  className="btn-add"
+                  onClick={handleSaveApiKey}
+                  disabled={isVerifying || !apiKey.trim()}>
+                  {isVerifying ? "..." : "Add"}
                 </button>
-              )}
+              </div>
 
-              {showApiKeyInput && (
-                <div className="api-key-input-form">
-                  <div className="api-key-input-row">
-                    <input
-                      id="api-key-name"
-                      type="text"
-                      className="topic-input api-name-input"
-                      placeholder="Name (optional)"
-                      value={apiKeyName}
-                      onChange={(e) => setApiKeyName(e.target.value)}
-                    />
-                    <input
-                      id="api-key"
-                      type="password"
-                      className="topic-input api-key-input"
-                      placeholder="Enter your YouTube API key..."
-                      value={apiKey}
-                      onChange={(e) => setApiKey(e.target.value)}
-                    />
-                  </div>
-                  <div className="api-key-buttons">
-                    <button
-                      className="api-key-btn cancel"
-                      onClick={() => {
-                        setShowApiKeyInput(false)
-                        setApiKey("")
-                        setApiKeyName("")
-                        setApiKeyStatus("")
-                      }}>
-                      Cancel
-                    </button>
-                    <button
-                      className="api-key-btn save"
-                      onClick={handleSaveApiKey}
-                      disabled={isVerifying || !apiKey.trim()}>
-                      {isVerifying ? "Verifying..." : "Save & Verify"}
-                    </button>
-                  </div>
-                  {apiKeyStatus && (
-                    <p className="api-key-status-message">{apiKeyStatus}</p>
-                  )}
-                  <p className="input-hint">
-                    Get a key from{" "}
-                    <a
-                      href="https://console.cloud.google.com/apis/credentials"
-                      target="_blank"
-                      rel="noopener noreferrer">
-                      Google Cloud Console
-                    </a>
-                  </p>
-                </div>
-              )}
+              <a
+                href="https://console.cloud.google.com/apis/credentials"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="help-link">
+                Get API key →
+              </a>
             </div>
-          </div>
-        )}
-      </main>
-
-      <footer className="popup-footer">
-        {/* Stats Section */}
-        <div className="stats-section">
-          <span className="stats-label">Videos Filtered Today</span>
-          <span className="stats-value">{videosFiltered}</span>
-        </div>
-
-        <p className="status">
-          Status:{" "}
-          <span className={isEnabled ? "status-active" : "status-inactive"}>
-            {isEnabled ? "Focusing" : "Idle"}
-          </span>
-          {isEnabled && topics.length > 0 && (
-            <span className="current-topic"> on {topics.join(", ")}</span>
           )}
-        </p>
-      </footer>
+        </>
+      )}
     </div>
   )
 }
