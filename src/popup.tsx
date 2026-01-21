@@ -316,7 +316,7 @@ function IndexPopup() {
                         <div className="step-content">
                           <p className="step-title">Create a Google Cloud project</p>
                           <p className="step-text">
-                            Go to the{" "}
+                            Go to{" "}
                             <a
                               href="https://console.cloud.google.com/projectcreate"
                               target="_blank"
@@ -333,7 +333,7 @@ function IndexPopup() {
                         <div className="step-content">
                           <p className="step-title">Enable YouTube Data API v3</p>
                           <p className="step-text">
-                            In your project, search for and enable the{" "}
+                            In your project, search for and enable{" "}
                             <strong>YouTube Data API v3</strong> service.
                           </p>
                         </div>
@@ -344,7 +344,7 @@ function IndexPopup() {
                         <div className="step-content">
                           <p className="step-title">Create API credentials</p>
                           <p className="step-text">
-                            Go to Credentials and create an API key. Copy the key
+                            Go to Credentials and create an API key. Copy key
                             and paste it below.
                           </p>
                         </div>

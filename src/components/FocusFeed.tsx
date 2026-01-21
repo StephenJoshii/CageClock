@@ -273,11 +273,6 @@ export function FocusFeed({
           <p className="cageclock-empty-hint">Try a different focus topic</p>
         </div>
       )}
-
-      {/* Footer */}
-      <div className="cageclock-feed-footer">
-        <p>Powered by CageClock • Stay Focused 💪</p>
-      </div>
     </div>
   )
 }
