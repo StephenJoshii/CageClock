@@ -142,12 +142,12 @@ function IndexPopup() {
 
   const handleSaveApiKey = async () => {
     if (!apiKey.trim()) {
-      setStatusMsg("Enter an API key")
+      setStatusMsg("Please enter an API key")
       return
     }
 
     setIsVerifying(true)
-    setStatusMsg("Verifying...")
+    setStatusMsg("Verifying API key...")
 
     try {
       const response = (await new Promise((resolve) => {
@@ -159,17 +159,16 @@ function IndexPopup() {
 
       if (response?.valid) {
         await saveApiKey(apiKey.trim(), apiKeyName.trim() || undefined)
-        setStatusMsg("Key saved ✓")
+        setStatusMsg("API key saved")
         setHasApiKey(true)
         setApiKey("")
         setApiKeyName("")
-        setShowSettings(false)
         await loadApiKeys()
-        setTimeout(() => setStatusMsg(""), 2000)
+        setTimeout(() => setStatusMsg(""), 3000)
       } else if (response?.error) {
         setStatusMsg(response.error)
       } else {
-        setStatusMsg("Invalid key")
+        setStatusMsg("Invalid API key")
       }
     } catch (error) {
       setStatusMsg("Network error")
@@ -186,8 +185,8 @@ function IndexPopup() {
   const handleDeleteApiKey = async (id: string) => {
     await deleteApiKey(id)
     await loadApiKeys()
-    setStatusMsg("Key deleted")
-    setTimeout(() => setStatusMsg(""), 1500)
+    setStatusMsg("API key deleted")
+    setTimeout(() => setStatusMsg(""), 2000)
   }
 
   const handleStartBreak = () => {
@@ -216,10 +215,10 @@ function IndexPopup() {
   const getVerificationStatus = (key: ApiKey): string => {
     if (!key.isValid) return "Invalid"
     const minutesAgo = Math.floor((Date.now() - key.lastVerified) / 60000)
-    if (minutesAgo < 1) return "Just now"
-    if (minutesAgo < 60) return `${minutesAgo}m ago`
-    if (minutesAgo < 1440) return `${Math.floor(minutesAgo / 60)}h ago`
-    return `${Math.floor(minutesAgo / 1440)}d ago`
+    if (minutesAgo < 1) return "Verified just now"
+    if (minutesAgo < 60) return `Verified ${minutesAgo}m ago`
+    if (minutesAgo < 1440) return `Verified ${Math.floor(minutesAgo / 60)}h ago`
+    return `Verified ${Math.floor(minutesAgo / 1440)}d ago`
   }
 
   const formatApiKey = (key: string): string => {
@@ -227,11 +226,11 @@ function IndexPopup() {
   }
 
   return (
-    <div className="p">
+    <div className="popup">
       {isOnBreak ? (
         <div className="break-view">
           <div className="break-timer">{remainingTime}</div>
-          <p className="break-text">Break time</p>
+          <p className="break-text">Break in progress</p>
           <button className="btn-primary" onClick={handleEndBreak}>
             Resume Focus
           </button>
@@ -239,138 +238,192 @@ function IndexPopup() {
       ) : (
         <>
           <header className="header">
-            <div className="logo">
-              <span className="logo-icon">◎</span>
-              <span>CageClock</span>
-            </div>
-            <div className="header-actions">
-              <button
-                className={`toggle ${isEnabled ? "on" : ""}`}
-                onClick={handleToggle}
-                disabled={isSaving}>
-                <span className="toggle-thumb"></span>
-              </button>
-            </div>
+            <span className="logo">CageClock</span>
           </header>
 
           <main className="main">
+            <section className="section">
+              <div className="section-label">Focus Mode</div>
+              <button
+                className={`toggle ${isEnabled ? "on" : ""}`}
+                onClick={handleToggle}
+                disabled={isSaving}
+                aria-label="Toggle focus mode">
+                <span className="toggle-thumb"></span>
+              </button>
+            </section>
+
+            <section className="section">
+              <div className="section-label">Focus Topics</div>
+              <div className="chips">
+                {topics.map((t) => (
+                  <span key={t} className="chip">
+                    {t}
+                    <button className="chip-remove" onClick={() => removeChip(t)}>
+                      Remove
+                    </button>
+                  </span>
+                ))}
+                <input
+                  className="chip-input"
+                  placeholder={topics.length ? "Add topic..." : "+ Add topic"}
+                  value={inputValue}
+                  onChange={handleInputChange}
+                  onKeyDown={handleInputKeyDown}
+                />
+              </div>
+            </section>
+
             {isEnabled && (
-              <div className="topics-section">
-                <div className="chips">
-                  {topics.map((t) => (
-                    <span key={t} className="chip">
-                      {t}
-                      <button className="chip-x" onClick={() => removeChip(t)}>
-                        ×
-                      </button>
-                    </span>
-                  ))}
-                  <input
-                    className="chip-input"
-                    placeholder={topics.length ? "+" : "Add topic..."}
-                    value={inputValue}
-                    onChange={handleInputChange}
-                    onKeyDown={handleInputKeyDown}
-                  />
-                </div>
+              <section className="section">
                 <button className="break-btn" onClick={handleStartBreak}>
                   Take a break
                 </button>
-              </div>
-            )}
-
-            {!isEnabled && (
-              <div className="empty-state">
-                <p>Toggle focus mode to start</p>
-              </div>
+              </section>
             )}
           </main>
 
           <footer className="footer">
-            <div className="footer-left">
-              <button
-                className="icon-btn"
-                onClick={() => setShowSettings(!showSettings)}
-                title="Settings">
-                ⚙️
-              </button>
-              {statusMsg && <span className="status-msg">{statusMsg}</span>}
+            <div className="footer-stat">
+              Videos filtered today: {videosFiltered}
             </div>
-            <div className="footer-right">
-              <span className="stat">{videosFiltered} filtered</span>
-            </div>
+            <button
+              className="settings-btn"
+              onClick={() => setShowSettings(true)}>
+              Settings
+            </button>
           </footer>
 
           {showSettings && (
-            <div className="settings-panel">
-              <div className="settings-header">
-                <span>API Keys</span>
-                <button className="icon-btn" onClick={() => setShowSettings(false)}>
-                  ×
-                </button>
-              </div>
+            <div className="settings-overlay">
+              <div className="settings-panel">
+                <div className="settings-header">
+                  <button
+                    className="btn-back"
+                    onClick={() => setShowSettings(false)}>
+                    Back
+                  </button>
+                  <span className="settings-title">Settings</span>
+                  <div style={{ width: 50 }}></div>
+                </div>
 
-              {apiKeys.length > 0 && (
-                <div className="key-list">
-                  {apiKeys.map((key) => (
-                    <div
-                      key={key.id}
-                      className={`key-item ${key.isValid ? "valid" : "invalid"}`}>
-                      <div className="key-info">
-                        <span className="key-name">{key.name}</span>
-                        <span className="key-val">{formatApiKey(key.key)}</span>
-                        <span className="key-status">{getVerificationStatus(key)}</span>
+                <div className="settings-content">
+                  <div className="settings-section">
+                    <h2 className="settings-section-title">API Key Setup</h2>
+                    <div className="steps">
+                      <div className="step">
+                        <div className="step-number">1</div>
+                        <div className="step-content">
+                          <p className="step-title">Create a Google Cloud project</p>
+                          <p className="step-text">
+                            Go to the{" "}
+                            <a
+                              href="https://console.cloud.google.com/projectcreate"
+                              target="_blank"
+                              rel="noopener noreferrer">
+                              Google Cloud Console
+                            </a>{" "}
+                            and create a new project.
+                          </p>
+                        </div>
                       </div>
-                      <div className="key-actions">
-                        {key.isValid && (
-                          <button
-                            className="icon-btn-small"
-                            onClick={() => handleSelectApiKey(key.id)}
-                            title="Use this key">
-                            ✓
-                          </button>
-                        )}
-                        <button
-                          className="icon-btn-small"
-                          onClick={() => handleDeleteApiKey(key.id)}
-                          title="Delete">
-                          ×
-                        </button>
+
+                      <div className="step">
+                        <div className="step-number">2</div>
+                        <div className="step-content">
+                          <p className="step-title">Enable YouTube Data API v3</p>
+                          <p className="step-text">
+                            In your project, search for and enable the{" "}
+                            <strong>YouTube Data API v3</strong> service.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="step">
+                        <div className="step-number">3</div>
+                        <div className="step-content">
+                          <p className="step-title">Create API credentials</p>
+                          <p className="step-text">
+                            Go to Credentials and create an API key. Copy the key
+                            and paste it below.
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  ))}
+                  </div>
+
+                  <div className="settings-section">
+                    <h2 className="settings-section-title">Add API Key</h2>
+                    {statusMsg && <div className="status-msg">{statusMsg}</div>}
+                    <div className="form-group">
+                      <label className="form-label">Name (optional)</label>
+                      <input
+                        className="input"
+                        placeholder="e.g., My YouTube Key"
+                        value={apiKeyName}
+                        onChange={(e) => setApiKeyName(e.target.value)}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">API Key</label>
+                      <input
+                        className="input"
+                        type="password"
+                        placeholder="Paste your API key here"
+                        value={apiKey}
+                        onChange={(e) => setApiKey(e.target.value)}
+                      />
+                    </div>
+                    <button
+                      className="btn-save"
+                      onClick={handleSaveApiKey}
+                      disabled={isVerifying || !apiKey.trim()}>
+                      {isVerifying ? "Verifying..." : "Save API Key"}
+                    </button>
+                  </div>
+
+                  {apiKeys.length > 0 && (
+                    <div className="settings-section">
+                      <h2 className="settings-section-title">
+                        Saved API Keys
+                      </h2>
+                      <div className="keys-list">
+                        {apiKeys.map((key) => (
+                          <div
+                            key={key.id}
+                            className={`key-item ${key.isValid ? "valid" : "invalid"}`}>
+                            <div className="key-info">
+                              <span className="key-name">{key.name}</span>
+                              <span className="key-val">
+                                {formatApiKey(key.key)}
+                              </span>
+                              <span className="key-status">
+                                {getVerificationStatus(key)}
+                              </span>
+                            </div>
+                            <div className="key-actions">
+                              {key.isValid && (
+                                <button
+                                  className="btn-icon"
+                                  onClick={() => handleSelectApiKey(key.id)}
+                                  title="Use this key">
+                                  Use
+                                </button>
+                              )}
+                              <button
+                                className="btn-icon btn-delete"
+                                onClick={() => handleDeleteApiKey(key.id)}
+                                title="Delete">
+                                Delete
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
-
-              <div className="add-key">
-                <input
-                  className="input"
-                  placeholder="Name (optional)"
-                  value={apiKeyName}
-                  onChange={(e) => setApiKeyName(e.target.value)}
-                />
-                <input
-                  className="input"
-                  type="password"
-                  placeholder="API key"
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                />
-                <button
-                  className="btn-add"
-                  onClick={handleSaveApiKey}
-                  disabled={isVerifying || !apiKey.trim()}>
-                  {isVerifying ? "..." : "Add"}
-                </button>
               </div>
-
-              <a
-                href="https://console.cloud.google.com/apis/credentials"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="help-link">
-                Get API key →
-              </a>
             </div>
           )}
         </>
