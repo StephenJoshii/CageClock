@@ -329,9 +329,14 @@ function YouTubeContentScript() {
     setError(null)
 
     try {
-      const response = await chrome.runtime.sendMessage({
-        type: "FETCH_VIDEOS",
-        forceFresh: false
+      const response = await new Promise((resolve) => {
+        chrome.runtime.sendMessage(
+          {
+            type: "FETCH_VIDEOS",
+            forceFresh: false
+          },
+          resolve
+        )
       })
 
       if (response?.success) {
@@ -357,37 +362,45 @@ function YouTubeContentScript() {
 
     setIsLoadingMore(true)
 
-    try {
-      const response = await chrome.runtime.sendMessage({
-        type: "FETCH_MORE_VIDEOS",
-        pageToken: nextPageToken
-      })
+      try {
+        const response = await new Promise((resolve) => {
+          chrome.runtime.sendMessage(
+            {
+              type: "FETCH_MORE_VIDEOS",
+              pageToken: nextPageToken
+            },
+            resolve
+          )
+        })
 
-      if (response?.success) {
-        setVideos((prevVideos) => [...prevVideos, ...response.videos])
-        setNextPageToken(response.nextPageToken)
-        setHasMore(!!response.nextPageToken)
-        console.log(
-          "[CageClock] Loaded",
-          response.videos.length,
-          "more videos. Total:",
-          videos.length + response.videos.length
-        )
-      } else {
-        console.error("[CageClock] Error loading more videos:", response?.error)
+        if (response?.success) {
+          setVideos((prevVideos) => [...prevVideos, ...response.videos])
+          setNextPageToken(response.nextPageToken)
+          setHasMore(!!response.nextPageToken)
+          console.log(
+            "[CageClock] Loaded",
+            response.videos.length,
+            "more videos. Total:",
+            videos.length + response.videos.length
+          )
+        } else {
+          console.error("[CageClock] Error loading more videos:", response?.error)
+        }
+      } catch (err) {
+        console.error("[CageClock] Communication error:", err)
+      } finally {
+        setIsLoadingMore(false)
       }
-    } catch (err) {
-      console.error("[CageClock] Communication error:", err)
-    } finally {
-      setIsLoadingMore(false)
-    }
   }
 
   const handleRefresh = () => {
     initialFetchDone.current = false
     setNextPageToken(undefined)
     setHasMore(true)
-    chrome.runtime.sendMessage({ type: "CLEAR_CACHE" }, () => {
+
+    new Promise((resolve) => {
+      chrome.runtime.sendMessage({ type: "CLEAR_CACHE" }, resolve)
+    }).then(() => {
       fetchVideos()
     })
   }

@@ -17,7 +17,7 @@ module.exports = {
   ],
   coverageReporters: ["text", "lcov"],
   transform: {
-    "^.+\\.(ts|tsx)?$": ["ts-jest", { tsconfig: "<rootDir>/tsconfig.json", isolatedModules: true }],
+    "^.+\\.(ts|tsx)?$": ["ts-jest", { tsconfig: "<rootDir>/tsconfig.json" }],
   },
   testMatch: [
     "**/__tests__/**/*.test.{js,jsx,ts,tsx}",
