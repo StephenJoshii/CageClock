@@ -25,6 +25,7 @@ function IndexPopup() {
   const [isVerifying, setIsVerifying] = useState(false)
   const [videosFiltered, setVideosFiltered] = useState(0)
   const [statusMsg, setStatusMsg] = useState("")
+  const [showApiSetup, setShowApiSetup] = useState(true)
 
   const [apiKeys, setApiKeysList] = useState<ApiKey[]>([])
   const [isOnBreak, setIsOnBreak] = useState(false)
@@ -307,10 +308,20 @@ function IndexPopup() {
                   <div style={{ width: 50 }}></div>
                 </div>
 
-                <div className="settings-content">
-                  <div className="settings-section">
-                    <h2 className="settings-section-title">API Key Setup</h2>
-                    <div className="steps">
+                 <div className="settings-content">
+                   <div className="settings-section">
+                     <div className="settings-section-header">
+                       <h2 className="settings-section-title">API Key</h2>
+                       <button
+                         className="help-toggle"
+                         onClick={() => setShowApiSetup(!showApiSetup)}
+                         title="How to get an API key?"
+                       >
+                         {showApiSetup ? "Hide guide" : "How to get API key?"}
+                       </button>
+                     </div>
+
+                     <div className={`steps ${showApiSetup ? "show" : "hide"}`}>
                       <div className="step">
                         <div className="step-number">1</div>
                         <div className="step-content">
@@ -350,10 +361,12 @@ function IndexPopup() {
                         </div>
                       </div>
                     </div>
-                  </div>
+                    </div>
 
-                  <div className="settings-section">
-                    <h2 className="settings-section-title">Add API Key</h2>
+                    <div className="form-divider"></div>
+
+                    <div className="settings-section">
+                      <h2 className="settings-section-title">Add API Key</h2>
                     {statusMsg && <div className="status-msg">{statusMsg}</div>}
                     <div className="form-group">
                       <label className="form-label">Name (optional)</label>
